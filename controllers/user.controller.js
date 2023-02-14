@@ -12,8 +12,8 @@ exports.getAllUsers = async (req, res, next) => {
     try {
         const users = await Users.find();
         JSONResponse.success(res, 'Success.', users, 200);
-    } catch (err) {
-        JSONResponse.err(res, "Failed to get all users.", err, 500);
+    } catch (error) {
+        JSONResponse.error(res, "Failed to get all users.", error, 404);
     }
 }
 
@@ -23,8 +23,8 @@ exports.getUserById = async (req, res, next) => {
     try {
         const user = await Users.findById(req.params.id);
         JSONResponse.success(res, 'Success.', user, 200);
-    } catch (err) {
-        JSONResponse.err(res, "Failed to get user by id.", err, 404);
+    } catch (error) {
+        JSONResponse.error(res, "Failed to get user by id.", error, 404);
     }
 }
 
@@ -36,8 +36,8 @@ exports.createUser = async (req, res, next) => {
 
         const user = await Users.create({...req.body, address: [address._id]});
         JSONResponse.success(res, 'Success.', user, 201);   
-    } catch (err) {
-        JSONResponse.err(res, "Failed to create user or address.", err, 500);
+    } catch (error) {
+        JSONResponse.error(res, "Failed to create user or address.", error, 404);
     }
 }
 
@@ -47,8 +47,8 @@ exports.updateUser = async (req, res) => {
     try {
         const user = await Users.findByIdAndUpdate(req.params.id, req.body, {new:true});
         JSONResponse.success(res, 'Success.', user, 200);
-    } catch (err) {
-        JSONResponse.err(res, "Failed to update user.", err, 500);
+    } catch (error) {
+        JSONResponse.error(res, "Failed to update user.", error, 404);
     }
 }
 
@@ -58,8 +58,8 @@ exports.deleteUser = async (req, res) => {
     try {
         const user = await Users.findByIdAndDelete(req.params.id);
         JSONResponse.success(res, 'Success.', user, 200);
-    } catch (err) {
-        JSONResponse.err(res, "Failed to delete user.", err, 500);
+    } catch (error) {
+        JSONResponse.error(res, "Failed to delete user.", error, 404);
     }
 }
 

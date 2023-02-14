@@ -7,7 +7,7 @@ class JSONResponse {
        });
     }
     
-    static err(res, message = "error", error, status) {
+    static error(res, message = "error", error, status) {
       if(error.message){
          error = error.message;
       }
