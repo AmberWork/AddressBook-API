@@ -7,8 +7,8 @@ const userSchema = new Schema({
     email: {type: String, required:[true, "Email is a required field"]},
     password: {type: String, required:[true, "Password is a required field"]},
     profile: {type: String},
-    isAdmin: {type: Boolean, default: False},
-    isApproved: {type: Boolean, default: False},
+    isAdmin: {type: Boolean, default: false},
+    isApproved: {type: Boolean, default: false},
 
     address: {type: [Schema.Types.ObjectId], ref:"Address"},
     // The cell number will be required if the home number is not provided and vice versa.
