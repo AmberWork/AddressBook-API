@@ -10,7 +10,8 @@ const app = express();
 // ---------------
 // Routes
 // ---------------
-const userRouter = require('./routes/user.routes')
+// Gets version one of the api
+const apiVersion_1 = require('./apis/v1/root.api');
 // ---------------
 
 
@@ -26,7 +27,8 @@ app.use(express.urlencoded({ extended: true }))
 // ---------------
 // Routes
 // ---------------
-app.use('/api/v1/users', userRouter)
+// tells the server to user "/api/v1" to prefix the api version_1 routes
+app.use('/api/v1/', apiVersion_1)
 // ---------------
 
 
