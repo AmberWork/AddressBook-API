@@ -1,4 +1,5 @@
 const {Schema, model} = require("mongoose");
+const bcrypt = require("bcryptjs");
 const addressSchema = require("./address.schema");
 
 const roleEnum = [
@@ -25,6 +26,34 @@ const userSchema = new Schema({
 
 //Here should contain any pre and post middlewares for schema.
 
+// Middleware function to execute and hash password before saving user into the database.
+userSchema.pre("save", async function(next){
+    try{
+        if(!this.isModified('password')) return next(); 
+        this.password = await bcrypt.hash(this.password,10);       
+    }catch(error){
+        return Promise.reject(new Error(error.message));
+    }
+    
+});
+
+// Check for duplicate emails in the user table
+userSchema.methods.checkDupe = function () {
+	return new Promise(async (resolve, reject) => {
+		const dupe = await model('User')
+			.find({ email: this.email})
+			.catch((err) => {
+				reject(err)
+			})
+		resolve(dupe.length > 0)
+	})
+}
+
+// Instance method to check for a password to compare a password with the encrypted password on the instance document.
+userSchema.methods.isCorrectPassword = async function(password){
+    let isCorrect = await bcrypt.compare(password, this.password);
+    return isCorrect;
+}
 
 
 //
