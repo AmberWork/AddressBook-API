@@ -1,7 +1,10 @@
-// const Users = require('../models/user.model');
+// ---------------
+// Based Imports
+// ---------------
 const Users = require('../schemas/user.schema');
 const Address = require('../schemas/address.schema');
 const { JSONResponse } = require('../utilities/response.utility');
+// ---------------
 
 
 // get all users
@@ -21,7 +24,7 @@ exports.getUserById = async (req, res, next) => {
         const user = await Users.findById(req.params.id);
         JSONResponse.success(res, 'Success.', user, 200);
     } catch (err) {
-        JSONResponse.err(res, "Failed to get user by id.", err, 500);
+        JSONResponse.err(res, "Failed to get user by id.", err, 404);
     }
 }
 
