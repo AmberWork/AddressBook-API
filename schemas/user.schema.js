@@ -15,6 +15,7 @@ const userSchema = new Schema({
     password: {type: String, required:[true, "Password is a required field"]},
     profile_image: {type: String},
     role: {type: String, enum:{values:["ADMIN", "USER"], message: `{VALUES} is not a valid role. roles: ${roleEnum}`},  default: "USER"},
+
     // The cell number will be required if the home number is not provided and vice versa.
     mobile_number: {type: String, required: [function(){ return this.role != "ADMIN" && !this.home_num}, "A phone number needs to be on file"]},
     home_number: {type: String, required:[function(){ return this.role != "ADMIN" && !this.cell_num}, "A phone number needs to be on file"]},
