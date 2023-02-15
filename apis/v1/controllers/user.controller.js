@@ -23,7 +23,6 @@ exports.loginUser = async(req, res, next)=>{
         let {platform} = req.query;
         platform = platform.toLowerCase();
         if(!platform) throw new Error("No platform provided");
-        console.log(platform);
         let {email, password} = req.body;
         if(Object.keys(req.body).length == 0) throw new Error("No data passed to login");
         const user = await User.findOne({email: email});
@@ -54,7 +53,12 @@ exports.getUserById = async (req, res, next) => {
 // create address and user
 exports.createUser = async (req, res, next) => {
     try {
-        const user = await User.create({...req.body});
+        let {platform} = req.query;
+        platform = platform.toLowerCase();
+        if(!platform) throw new Error("No platform provided");
+        let user = await User.create({...req.body});
+        user.password = undefined;
+        user.role = (platform == "web") ? undefined : user.role;
         JSONResponse.success(res, 'Success.', user, 201);   
     } catch (error) {
         JSONResponse.error(res, "Failed to create user or address.", error, 404);
