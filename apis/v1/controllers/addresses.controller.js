@@ -39,11 +39,16 @@ exports.getAddressById = async (req, res, next) => {
 
 
 // create address
-exports. createAddress = async (req, res, next) => {
+exports.createAddress = async (req, res, next) => {
     try {
         const address = await Address.create(req.body)
         
         if(!address) throw new Error('Address not created');
+
+        // check if the user_id is of the ObjectID type
+         if(!mongoose.Types.ObjectId.isValid(user_id)) {
+            throw new Error('User id is not valid');
+         }
 
         JSONResponse.success(res, 'Success.', address, 201);
     } catch (error) {
