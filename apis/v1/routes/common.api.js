@@ -1,13 +1,13 @@
 const router = require("express").Router();
-
+const UserController = require("../controllers/user.controller")
 
 router
     .route("/login")
-// .post(UserController.loginUser) this is assuming that it is the name of the class and method.
+.post(UserController.loginUser)
 
 router
     .route("/users")
-    // .post(UserController.createUser) this is assuming that it is the name of the class and method.
+    .post(UserController.createUser)
     
 
 
