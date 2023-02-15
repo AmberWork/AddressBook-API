@@ -1,9 +1,9 @@
 // ---------------
 // Based Imports
 // ---------------
-const Users = require('../schemas/user.schema');
-const Address = require('../schemas/address.schema');
-const { JSONResponse } = require('../utilities/response.utility');
+const Users = require('../../schemas/user.schema');
+const Address = require('../../schemas/address.schema');
+const { JSONResponse } = require('../../utilities/response.utility');
 // ---------------
 
 
