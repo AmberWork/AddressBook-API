@@ -4,6 +4,7 @@
 const User = require('../../../schemas/user.schema');
 const Address = require('../../../schemas/address.schema');
 const { JSONResponse } = require('../../../utilities/response.utility');
+const JWTHelper = require('../../../utilities/token.utility');
 // ---------------
 
 
@@ -19,13 +20,20 @@ exports.getAllUsers = async (req, res, next) => {
 
 exports.loginUser = async(req, res, next)=>{
     try{
+        let {platform} = req.query;
+        platform = platform.toLowerCase();
+        if(!platform) throw new Error("No platform provided");
+        console.log(platform);
         let {email, password} = req.body;
         if(Object.keys(req.body).length == 0) throw new Error("No data passed to login");
         const user = await User.findOne({email: email});
         if(!user) throw new Error("No user matches this email");
         let passCheck = await user.isCorrectPassword(password);
         if(!passCheck)throw new Error("Invalid password");
-        JSONResponse.success(res, "Successfully found user", user, 200);
+        user.password = undefined;
+        user.role = (platform == "web") ? undefined : user.role;
+        let token = JWTHelper.genToken({id: user._id, role: user.role, email: user.email}, "900");
+        JSONResponse.success(res, "Successfully found user", {user, token}, 200);
     }catch(error){
         JSONResponse.error(res, "Unable to login", error, 404);
     }
