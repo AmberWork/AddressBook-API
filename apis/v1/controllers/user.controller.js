@@ -1,8 +1,8 @@
 // ---------------
 // Based Imports
 // ---------------
+const { default: mongoose } = require('mongoose');
 const User = require('../../../schemas/user.schema');
-const Address = require('../../../schemas/address.schema');
 const { JSONResponse } = require('../../../utilities/response.utility');
 const JWTHelper = require('../../../utilities/token.utility');
 // ---------------
@@ -23,7 +23,6 @@ exports.loginUser = async(req, res, next)=>{
         let {platform} = req.query;
         if(!platform) throw new Error("No platform provided");
         platform = platform.toLowerCase();
-
         let {email, password} = req.body;
         if(Object.keys(req.body).length == 0) throw new Error("No data passed to login");
         const user = await User.findOne({email: email});
@@ -57,7 +56,13 @@ exports.createUser = async (req, res, next) => {
         let {platform} = req.query;
         if(!platform) throw new Error("No platform provided");
         platform = platform.toLowerCase();
-        let user = await User.create({...req.body});
+        let userData = req.body;
+        console.log(req.file)
+        userData.profile_image = (req.file) ? req.file.path: undefined;
+        let user = new User(userData); // creates model from userdata
+        let duplicated = await user.checkDupe();
+        if(duplicated) throw new Error("A user with that email already exists");
+        await user.save(); // saves model 
         user.password = undefined;
         user.role = (platform == "web") ? undefined : user.role;
         JSONResponse.success(res, 'Success.', user, 201);   
