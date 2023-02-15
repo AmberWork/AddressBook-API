@@ -13,6 +13,7 @@ const PORT = process.env.PORT || 5000;
 // ---------------
 // Start Express App
 // ---------------
+mongoose.set('strictQuery', true);
 mongoose.connect(process.env.MONGODB_URI)
 .then(() => console.log('MongoDB Connected Successfully!'))
 .catch(err => console.log(err));
