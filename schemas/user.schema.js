@@ -17,8 +17,8 @@ const userSchema = new Schema({
     role: {type: String, enum:{values:["ADMIN", "USER"], message: `{VALUES} is not a valid role. roles: ${roleEnum}`},  default: "USER"},
 
     // The cell number will be required if the home number is not provided and vice versa.
-    mobile_number: {type: String, required: [function(){ return this.role != "ADMIN" && !this.home_num}, "A phone number needs to be on file"]},
-    home_number: {type: String, required:[function(){ return this.role != "ADMIN" && !this.cell_num}, "A phone number needs to be on file"]},
+    mobile_number: {type: String, required: [function(){ return this.role != "ADMIN" && !this.home_number}, "A phone number needs to be on file"]},
+    home_number: {type: String, required:[function(){ return this.role != "ADMIN" && !this.mobile_number}, "A phone number needs to be on file"]},
     status: {type: String, enum: {values: statusEnum, message:`{VALUES} is not a valid status. statuses: ${statusEnum}`}},
     deletedAt: {type:Schema.Types.Date, default: null},
 
