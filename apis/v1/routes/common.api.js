@@ -1,4 +1,5 @@
 const router = require("express").Router();
+const FileUploader = require("../../../utilities/file_upload.utility");
 const UserController = require("../controllers/user.controller")
 
 router
@@ -7,7 +8,7 @@ router
 
 router
     .route("/users")
-    .post(UserController.createUser)
+    .post(FileUploader.uploadFile("Profile").single("profile_image"),UserController.createUser)
     
 
 
