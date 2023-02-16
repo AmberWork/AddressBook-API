@@ -108,6 +108,7 @@ exports.requestPasswordReset = async (req, res, next) => {
 exports.resetPassword = async(req, res, next)=>{
  try{
     let {password} = req.body;
+    if(!password) throw new Error("No password to update");
     let {user_id} = req.query;
     // Ensures that only the password will be updated on this route.
      let user = await User.findOne({_id: user_id});
