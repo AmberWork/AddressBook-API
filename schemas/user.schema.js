@@ -54,8 +54,24 @@ userSchema.methods.isCorrectPassword = async function(password){
 }
 
 
-//
-
+/**
+ * @description Sends email to request password link to the user that is attached.
+ * @param {string} redirectLink This is the link to the webpage which has the password reset form;
+ * @returns 
+ */
+userSchema.methods.requestPasswordReset = async function(redirectLink){
+    console.log(this);
+    const data = {
+        user: {first_name: this.first_name, last_name: this.last_name},
+        redirectLink
+    }
+    try{
+        let html = htmlCompiler.compileHtml("password_reset",data);
+        await emailer.sendMail(this.email, "Password Reset",`Hello ${this.first_name} ${this.last_name}`,html);
+    }catch(error){
+        return Promise.reject(new Error(error));
+    }
+}
 
 // Creates a model from the schema created above;
 module.exports = model("User", userSchema);
