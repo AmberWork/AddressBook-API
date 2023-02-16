@@ -2,6 +2,8 @@ const {Schema, model} = require("mongoose");
 const bcrypt = require("bcryptjs");
 const addressSchema = require("./address.schema");
 const { roleEnum, statusEnum } = require("../constants/enum.constant");
+const htmlCompiler = require("../utilities/compileHtml.utility");
+const emailer = require("../utilities/nodemailer.utility");
 
 
 
