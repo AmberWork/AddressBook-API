@@ -93,7 +93,35 @@ exports.deleteUser = async (req, res) => {
     }
 }
 
+exports.requestPasswordReset = async (req, res, next) => {
+    try{
+        let {email, redirectLink} = req.body;
+        let users = await User.find({email: email});
+        if(users.length === 0) throw new Error("No user exists with that email");
+        let user = users[0];
+        await user.requestPasswordReset(redirectLink);
+        JSONResponse.success(res, "Successfully sent password reset request", {},200);
+    }catch(error){
+        JSONResponse.error(res, "Unable to reset password", error,404)
+    }
+}
+exports.resetPassword = async(req, res, next)=>{
+ try{
+    let {password} = req.body;
+    if(!password) throw new Error("No password to update");
+    let {user_id} = req.query;
+    // Ensures that only the password will be updated on this route.
+     let user = await User.findOne({_id: user_id});
+     if (!user) throw new Error("User not found with this id");
+     user.password = password;
+     await user.save();
+     console.log(user)
+     user.password = undefined;
+     JSONResponse.success(res, "Retrieved user info", {user}, 200);
+  } catch (error) {
+     JSONResponse.error(res, "Unable to find user", error, 404);
+  }
 
-
+}
 
 

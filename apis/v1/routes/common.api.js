@@ -10,6 +10,11 @@ router
     .route("/users")
     .post(FileUploader.uploadFile("Profile").single("profile_image"),UserController.createUser)
     
+    router.route("/requestPasswordReset")
+    .post(UserController.requestPasswordReset);
+
+router.route("/resetPassword")
+    .post(UserController.resetPassword);
 
 
 
