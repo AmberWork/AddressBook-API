@@ -65,7 +65,7 @@ exports.createUser = async (req, res, next) => {
         await user.save(); // saves model 
         user.password = undefined;
         user.role = (platform == "web") ? undefined : user.role;
-        JSONResponse.success(res, 'Success.', user, 201);   
+        JSONResponse.success(res, 'Success.', {user}, 201);   
     } catch (error) {
         JSONResponse.error(res, "Failed to create user or address.", error, 404);
     }
