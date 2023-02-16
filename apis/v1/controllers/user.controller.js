@@ -117,7 +117,7 @@ exports.resetPassword = async(req, res, next)=>{
      await user.save();
      console.log(user)
      user.password = undefined;
-     JSONResponse.success(res, "Retrieved user info", user, 200);
+     JSONResponse.success(res, "Retrieved user info", {user}, 200);
   } catch (error) {
      JSONResponse.error(res, "Unable to find user", error, 404);
   }
