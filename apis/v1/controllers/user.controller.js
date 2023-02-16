@@ -107,12 +107,14 @@ exports.requestPasswordReset = async (req, res, next) => {
 }
 exports.resetPassword = async(req, res, next)=>{
  try{
-    let {password, email} = req.body;
+    let {password} = req.body;
+    let {user_id} = req.query;
     // Ensures that only the password will be updated on this route.
-    let data = {password};
-    console.log(data)
-     let user = await User.findOneAndUpdate({email: email},data,{new: true} );
+     let user = await User.findOne({_id: user_id});
      if (!user) throw new Error("User not found with this id");
+     user.password = password;
+     await user.save();
+     console.log(user)
      user.password = undefined;
      JSONResponse.success(res, "Retrieved user info", user, 200);
   } catch (error) {
