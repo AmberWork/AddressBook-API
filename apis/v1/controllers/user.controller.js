@@ -22,9 +22,11 @@ exports.getAllUsers = async (req, res, next) => {
         limit = (limit) ? limit : 10; // defaults limit to 10;
         limit = parseInt(limit); // ensures that limit is a number;
         let users = await User.find()
+                                .select("-password")
                                 .sort({first_name: 1}) // sorts by first_name in ascending order
                                 .skip((page-1) * limit) // skips the results by a specified ammount 
                                 .limit(limit); // sets the limit on the number of results to return
+        
         JSONResponse.success(res, 'Success.', users, 200);
     } catch (error) {
         JSONResponse.error(res, "Failed to get all users.", error, 404);
@@ -70,7 +72,8 @@ exports.getUserById = async (req, res, next) => {
         let user_id = req.params.user_id;
         if(!mongoose.isValidObjectId(user_id)) throw new Error("Invalid format of user_id");
         let user = await User.findById(user_id);
-        if(!user) throw new Error("No user found with this ID")
+        if(!user) throw new Error("No user found with this ID");
+        user.password = undefined;
         JSONResponse.success(res, 'Success.', user, 200);
     } catch (error) {
         JSONResponse.error(res, "Failed to get user by id.", error, 404);
@@ -119,6 +122,7 @@ exports.updateUser = async (req, res) => {
         userData.password = undefined;
         if(!mongoose.isValidObjectId(user_id)) throw new Error("Invalid format of user_id");
         let user = await User.findByIdAndUpdate(user_id,userData, {new:true});
+        user.password = undefined;
         JSONResponse.success(res, 'Success.', user, 200);
     } catch (error) {
         JSONResponse.error(res, "Failed to update user.", error, 404);
