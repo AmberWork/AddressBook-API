@@ -1,7 +1,9 @@
 # Ignore all env files, and the node_modules
 /node_modules
 *.env
-/uploads
+uploads/Profile/*
+!uploads/Profile/README.MD
+
 # Logs
 logs
 *.log
