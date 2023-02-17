@@ -102,7 +102,7 @@ exports.createUser = async (req, res, next) => {
         user.role = (platform == "web") ? undefined : user.role;
         JSONResponse.success(res, 'Success.', user, 201);   
     } catch (error) {
-        JSONResponse.error(res, "Failed to create user or address.", error, 404);
+        JSONResponse.error(res, "Failed to create user.", error, 404);
     }
 }
 
