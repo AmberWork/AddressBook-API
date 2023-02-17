@@ -71,7 +71,9 @@ class Middleware{
 }
 
 function userMatchesAccount(req, res, next){
-    if(req.params.user_id != res.locals.decoded.id || res.locals.decode.role != "ADMIN") throw new Error("User Does not have permission to view");
+    console.log(res.locals.decoded)
+    console.log(req.params.user_id)
+    if(req.params.user_id != res.locals.decoded.id && res.locals.decoded.role != "ADMIN") throw new Error("User Does not have permission to view");
     return true
 }
 
