@@ -9,8 +9,14 @@ router
 router
     .route("/users")
     .post(FileUploader.uploadFile("Profile").single("profile_image"),UserController.createUser)
-    
-    router.route("/requestPasswordReset")
+
+router
+    .route("/users/:user_id")
+    .patch(UserController.updateUser)
+    .delete(UserController.deleteUser)
+
+
+router.route("/requestPasswordReset")
     .post(UserController.requestPasswordReset);
 
 router.route("/resetPassword")
