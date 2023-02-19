@@ -13,6 +13,7 @@ router
 router
     .route("/users/:user_id")
     .all(Middleware.protectedViaRole(["ADMIN", "USER"]))
+    .get(UserController.getUserById)
     .patch(UserController.updateUser)
     .delete(UserController.deleteUser)
 
