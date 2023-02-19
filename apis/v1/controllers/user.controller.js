@@ -59,6 +59,9 @@ exports.loginUser = async(req, res, next)=>{
 }
 
 
+
+
+
 /**
  * @description Gets the user that matches the user_id that is passed to the route as a route param.
  * @param {Request} req The request that has been sent to the server
