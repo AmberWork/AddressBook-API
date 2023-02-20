@@ -6,12 +6,6 @@ const {
     getUserById,
     updateUser,
     deleteUser,
-    
-    // Temporary routes - for testing (will be removed)
-    getAllUsers,
-    createUser,
-    loginUser
-
 } = require("../controllers/user.controller");
 
 const {
@@ -42,15 +36,4 @@ router.route('/addresses/:id/destroy').delete(destroyAddress);
 // ---------------
 
 
-// ---------------
-// Temporary Routers - for testing (will be removed)
-// ---------------
-router.route('/users').get(getAllUsers).post(createUser);
-router.route('/users/login').post(loginUser);
-router.route('/users/:id');
-// ---------------
-
-
 module.exports = router;
-
-
