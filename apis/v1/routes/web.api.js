@@ -1,6 +1,39 @@
-const router = require("express").Router();
+// ---------------
+// Based Routes
+// ---------------
+const express = require("express");
+const {
+    getUserById,
+    updateUser,
+    deleteUser,
+} = require("../controllers/user.controller");
+
+const {
+    createAddress,
+    getAddressById,
+    updateAddress,
+    softDeleteAddress,
+    destroyAddress,
+} = require("../controllers/addresses.controller");
+
+// ---------------
 
 
+// ---------------
+// Based Variatbles
+// ---------------
+// const router = require("express").Router();
+const router = express.Router();
+// ---------------
+
+
+// ---------------
+// Based Routers
+// ---------------
+router.route('/users/:user_id').get(getUserById).put(updateUser).delete(deleteUser);
+router.route('/users/:id/addresses').get(getAddressById).post(createAddress).put(updateAddress).delete(softDeleteAddress);
+router.route('/addresses/:id/destroy').delete(destroyAddress);
+// ---------------
 
 
 module.exports = router;
