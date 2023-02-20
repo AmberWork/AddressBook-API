@@ -80,7 +80,7 @@ exports.softDeleteAddress = async (req, res) => {
     try {
         const address = await Address.findByIdAndUpdate(req.params.id, {
             status: 'INACTIVE',
-            deletedAt: Date.now(),
+            deletedAt: Date().toIsoString()
         })
         
 
