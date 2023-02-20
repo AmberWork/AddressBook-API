@@ -2,6 +2,7 @@
 // Based Imports
 // ---------------
 const { default: mongoose } = require('mongoose');
+const { getKeyFromValue, roleMap, statusMap } = require('../../../constants/constantMaps');
 const User = require('../../../schemas/user.schema');
 const { JSONResponse } = require('../../../utilities/response.utility');
 const JWTHelper = require('../../../utilities/token.utility');
@@ -95,11 +96,11 @@ exports.createUser = async (req, res, next) => {
         let userData = req.body;
         userData.profile_image = (req.file) ? req.file.path: undefined;
         let user = new User(userData); // creates model from userdata
-        let duplicated = await user.checkDupe();
+        let duplicated = await user.checkDuplicate();
         if(duplicated) throw new Error("A user with that email already exists");
-        await user.save(); // saves model 
+        user = await user.save(); // saves model 
         user.password = undefined;
-        user.role = (platform == "web") ? undefined : user.role;
+        user = this.makeUserReadable(user);
         JSONResponse.success(res, 'Success.', user, 201);   
     } catch (error) {
         JSONResponse.error(res, "Failed to create user.", error, 404);
@@ -192,6 +193,25 @@ exports.resetPassword = async(req, res, next)=>{
   } catch (error) {
      JSONResponse.error(res, "Unable to find user", error, 404);
   }
+
+}
+
+/**
+ * 
+ * @param {mongoose.Model<User>} user 
+ * @returns 
+ */
+exports.makeUserReadable = (user) =>{
+    let roleKey = getKeyFromValue(roleMap, user.role);
+    let statusKey = getKeyFromValue(statusMap, user.status)
+    if(!roleKey) throw new Error("Invalid role type on user");
+    if(!statusKey) throw new Error("Invalid role type on user");
+    let readableUser = {
+        ...user._doc,  // used this destructuring method, tried set however it would not update the value, could be due to conflicting types number vs string.
+        role: roleKey, 
+        status: statusKey,
+    }
+    return readableUser;
 
 }
 

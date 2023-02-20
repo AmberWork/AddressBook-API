@@ -2,6 +2,7 @@ const {Schema, model} = require("mongoose");
 const bcrypt = require("bcryptjs");
 const htmlCompiler = require("../utilities/compileHtml.utility");
 const emailer = require("../utilities/nodemailer.utility");
+const { roleMap, getKeyFromValue, statusEnum, statusMap } = require("../constants/constantMaps");
 
 
 
@@ -35,8 +36,19 @@ userSchema.pre("save", async function(next){
     
 });
 
+// Returns the correctFormat of of role
+
+
+// Softdelete of user
+userSchema.pre("deleteOne",(next)=>{
+    console.log("deleted");
+    this.deletedAt = new Date().toISOString();
+    this.status = statusEnum.get("INACTIVE");
+    
+});
+
 // Check for duplicate emails in the user table
-userSchema.methods.checkDupe = function () {
+userSchema.methods.checkDuplicate = function () {
 	return new Promise(async (resolve, reject) => {
 		const dupe = await model('User')
 			.find({ email: this.email})

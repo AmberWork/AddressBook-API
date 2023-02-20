@@ -5,7 +5,7 @@ module.exports.roleMap = new Map([
 ]);
 
 // Enum array of possible statuses: 
-module.exports.statusEnum = new Map ([
+module.exports.statusMap = new Map ([
     ["PENDING", 0], 
     ["APPROVED", 1], 
     ["ACTIVE", 2], 
