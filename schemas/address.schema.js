@@ -11,6 +11,7 @@ const addressSchema = new Schema({
     city: {type: String, required: [true, "City of address is required"]},
     parish: {type: Schema.Types.ObjectId, ref: "Parish", required: [true, "Parish of address is required"]},
     status: {type: String, enum: {values: statusEnum, message:`{VALUES} is not a valid status. statuses: ${statusEnum}`}},
+    deletedAt: {type: Date, default: Date.now}
 });
 
 
