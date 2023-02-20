@@ -1,7 +1,5 @@
 const {Schema, model} = require("mongoose");
 const bcrypt = require("bcryptjs");
-const addressSchema = require("./address.schema");
-const { roleEnum, statusEnum } = require("../constants/enum.constant");
 const htmlCompiler = require("../utilities/compileHtml.utility");
 const emailer = require("../utilities/nodemailer.utility");
 
@@ -13,12 +11,12 @@ const userSchema = new Schema({
     email: {type: String, required:[true, "Email is a required field"]},
     password: {type: String, required:[true, "Password is a required field"]},
     profile_image: {type: String},
-    role: {type: String, enum:{values:roleEnum, message: `{VALUES} is not a valid role. roles: ${roleEnum}`},  default: "USER"},
+    role: {type: Number, default: 0},
 
     // The cell number will be required if the home number is not provided and vice versa.
     mobile_number: {type: String, required: [function(){ return this.role != "ADMIN" && !this.home_number}, "A phone number needs to be on file"]},
     home_number: {type: String, required:[function(){ return this.role != "ADMIN" && !this.mobile_number}, "A phone number needs to be on file"]},
-    status: {type: String, enum: {values: statusEnum, message:`{VALUES} is not a valid status. statuses: ${statusEnum}`}},
+    status: {type: Number, default: 0},
     deletedAt: {type:Schema.Types.Date, default: null},
 
 }, {timestamps:true});
