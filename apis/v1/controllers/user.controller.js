@@ -53,8 +53,9 @@ exports.loginUser = async(req, res, next)=>{
         let passCheck = await user.isCorrectPassword(password);
         if(!passCheck)throw new Error("Invalid password");
         user.password = undefined;
-        user.role = (platform == "web") ? undefined : user.role;
         let token = JWTHelper.genToken({id: user._id, role: user.role, email: user.email}, "900");
+
+        user.role = (platform == "web") ? undefined : user.role;
         JSONResponse.success(res, "Successfully found user", {user, token}, 200);
     }catch(error){
         JSONResponse.error(res, "Unable to login", error, 404);
