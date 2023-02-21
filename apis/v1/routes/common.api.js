@@ -2,6 +2,7 @@ const router = require("express").Router();
 const FileUploader = require("../../../utilities/file_upload.utility");
 const UserController = require("../controllers/user.controller")
 const Middleware = require("../middlewares/middleware")
+const AddressController = require("../controllers/addresses.controller")
 router
     .route("/login")
     .post(UserController.loginUser)
@@ -25,6 +26,21 @@ router.route("/requestPasswordReset")
 router.route("/resetPassword")
     .all(Middleware.protectedViaRole(["USER","ADMIN"]))
     .post(UserController.resetPassword);
+    
+
+    // address
+router
+    .route('/users/address')
+    .post(AddressController.createAddress)
+
+router.route('/users/:user_id')
+    .all(Middleware.protectedViaRole(["USER","ADMIN"]))
+    .get(getUserById).put(updateUser)
+    .delete(AddressController.deleteUser);
+
+router.route('/addresses/:id/destroy')
+    .all(Middleware.protectedViaRole(["USER","ADMIN"]))
+    .delete(AddressController.destroyAddress);
 
 
 

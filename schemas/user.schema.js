@@ -1,9 +1,8 @@
 const {Schema, model} = require("mongoose");
 const bcrypt = require("bcryptjs");
-const addressSchema = require("./address.schema");
-const { roleEnum, statusEnum } = require("../constants/enum.constant");
 const htmlCompiler = require("../utilities/compileHtml.utility");
 const emailer = require("../utilities/nodemailer.utility");
+const { roleMap, getKeyFromValue, statusEnum, statusMap } = require("../constants/constantMaps");
 
 
 
@@ -13,12 +12,12 @@ const userSchema = new Schema({
     email: {type: String, required:[true, "Email is a required field"]},
     password: {type: String, required:[true, "Password is a required field"]},
     profile_image: {type: String},
-    role: {type: String, enum:{values:roleEnum, message: `{VALUES} is not a valid role. roles: ${roleEnum}`},  default: "USER"},
+    role: {type: Number, default: 0},
 
     // The cell number will be required if the home number is not provided and vice versa.
     mobile_number: {type: String, required: [function(){ return this.role != "ADMIN" && !this.home_number}, "A phone number needs to be on file"]},
     home_number: {type: String, required:[function(){ return this.role != "ADMIN" && !this.mobile_number}, "A phone number needs to be on file"]},
-    status: {type: String, enum: {values: statusEnum, message:`{VALUES} is not a valid status. statuses: ${statusEnum}`}},
+    status: {type: Number, default: 0},
     deletedAt: {type:Schema.Types.Date, default: null},
 
 }, {timestamps:true});
@@ -37,8 +36,19 @@ userSchema.pre("save", async function(next){
     
 });
 
+// Returns the correctFormat of of role
+
+
+// Softdelete of user
+userSchema.pre("deleteOne",(next)=>{
+    console.log("deleted");
+    this.deletedAt = new Date().toISOString();
+    this.status = statusEnum.get("INACTIVE");
+    
+});
+
 // Check for duplicate emails in the user table
-userSchema.methods.checkDupe = function () {
+userSchema.methods.checkDuplicate = function () {
 	return new Promise(async (resolve, reject) => {
 		const dupe = await model('User')
 			.find({ email: this.email})
