@@ -1,11 +1,14 @@
 const { JSONResponse } = require("../../../utilities/response.utility");
 const JWT = require("jsonwebtoken");
-const { roleEnum } = require("../../../constants/enum.constant");
+const {getKeyFromValue, roleMap } = require("../../../constants/constantMaps");
 
 class Middleware{
 
     // Selected route to test for;
-    selectedRoleList = [];
+    /**
+     * @type {String[]}
+     */
+    static selectedRoleList = [];
 
     /**
      * ### Description
@@ -48,7 +51,9 @@ class Middleware{
             }
              
         }catch(error){
-            throw new Error(error);
+            console.log(this.selectedRoleList)
+
+            console.log(error.stack)
         }
         
     }
@@ -57,7 +62,8 @@ class Middleware{
             let token = getTokenFromBearer(req);
             res.locals.token = token;
             res.locals.decoded = JWT.decode(token);
-            if(!this.selectedRoleList.includes(res.locals.decoded.role)) {
+            res.locals.user_role = getKeyFromValue(roleMap, res.locals.decoded.role);
+            if(!this.selectedRoleList.includes(res.locals.user_role)) {
                 return JSONResponse.error(res, "Unauthorized Access Attempted","Not the correct Auth Level", 403);
             }
             // compares the user id of the token to ensure that a user can only manage his data unless he is an admin.
@@ -73,7 +79,7 @@ class Middleware{
 function userMatchesAccount(req, res, next){
     console.log(res.locals.decoded)
     console.log(req.params.user_id)
-    if(req.params.user_id != res.locals.decoded.id && res.locals.decoded.role != "ADMIN") throw new Error("User Does not have permission to view");
+    if(req.params.user_id != res.locals.decoded.id && res.locals.user_role != "ADMIN") throw new Error("User Does not have permission to view");
     return true
 }
 
@@ -102,7 +108,7 @@ function isValidAuthLevel(authLevelList){
     // loop through authLevelList provided and test it agains 
     authLevel = authLevelList.map((authLevel)=> {
         authLevel = authLevel.toUpperCase();
-        if(!roleEnum.includes(authLevel)) throw new Error("Not a valid role");
+        if(!roleMap.has(authLevel)) throw new Error("Not a valid role");
         return authLevel;
     })
    
