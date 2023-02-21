@@ -19,11 +19,9 @@ router
     // Addresses routers
 router
     .route("/addresses")
+    .all(Middleware.protectedViaRole(["ADMIN"]))
     .get(AddressController.getAllAddresses)
 
-
-router
-.route('/users/:user_id/addresses').delete(softDeleteAddress);
 
 
     // Parishes routers
