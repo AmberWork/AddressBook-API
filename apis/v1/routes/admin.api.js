@@ -9,13 +9,24 @@ router
     .route("/users")
     .all(Middleware.protectedViaRole(["ADMIN"]))
     .get(UserController.getAllUsers)
+// ---------------
 
 
+// ---------------
+// Based Routers
+// ---------------
+
+    // Addresses routers
 router
     .route("/addresses")
     .get(AddressController.getAllAddresses)
 
 
+router
+.route('/users/:user_id/addresses').delete(softDeleteAddress);
+
+
+    // Parishes routers
 router
     .route("/parishes")
     .get(AddressController.getAllParish)
@@ -27,7 +38,7 @@ router
     .get(AddressController.getParishById)
     .put(AddressController.updateParish)
     .delete(AddressController.deleteParish)
-
+// ---------------
     
 module.exports = router;
 // ---------------

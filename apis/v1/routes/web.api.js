@@ -31,12 +31,10 @@ const router = express.Router();
 // ---------------
 // Based Routers
 // ---------------
-router.route('/users/:user_id').get(getUserById).put(updateUser).delete(deleteUser);
+router.route('/users/:user_id').get(getUserById).put(updateUser);
 
-router.route('/users/:user_id/addresses').get(getAllAddressByUserId).put(updateAddress).delete(softDeleteAddress);
-router.route('/users/address').post(createAddress)
+router.route('/users/:user_id/addresses').get(getAllAddressByUserId).put(updateAddress);
 router.route('/addresses/:id').get(getAddressById)
-router.route('/addresses/:id/destroy').delete(destroyAddress);
 // ---------------
 
 
