@@ -172,7 +172,7 @@ exports.updateParish = async (req, res) => {
 
 
 // delete Parish
-exports.destroyParish = async (req, res) => {
+exports.deleteParish = async (req, res) => {
     try {
         const parish = await Parish.findByIdAndDelete(req.params.id);
         if (!parish) throw new Error('Parish not deleted');

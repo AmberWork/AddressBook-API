@@ -24,9 +24,9 @@ router
 
 router
     .route("/parishes/:id")
-    .get(AddressController.getAddressById)
+    .get(AddressController.getParishById)
     .put(AddressController.updateParish)
-    // .delete(AddressController.deleteParish)
+    .delete(AddressController.deleteParish)
 
     
 module.exports = router;
