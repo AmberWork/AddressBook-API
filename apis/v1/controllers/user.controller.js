@@ -1,7 +1,7 @@
 // ---------------
 // Based Imports
 // ---------------
-const { default: mongoose } = require('mongoose');
+const { default: mongoose, Model, Document } = require('mongoose');
 const { getKeyFromValue, roleMap, statusMap } = require('../../../constants/constantMaps');
 const User = require('../../../schemas/user.schema');
 const { JSONResponse } = require('../../../utilities/response.utility');
@@ -105,6 +105,11 @@ exports.createUser = async (req, res, next) => {
         user = await user.save(); // saves model 
         user.password = undefined;
         user = this.makeUserReadable(user);
+        if(platform === "web"){
+            user = removeForWeb(user);
+        }else if(platform === "admin"){
+            user = removeForAdmin(user);
+        }
         JSONResponse.success(res, 'Success.', user, 201);   
     } catch (error) {
         JSONResponse.error(res, "Failed to create user.", error, 404);
@@ -128,6 +133,7 @@ exports.updateUser = async (req, res) => {
         if(!mongoose.isValidObjectId(user_id)) throw new Error("Invalid format of user_id");
         let user = await User.findByIdAndUpdate(user_id,userData, {new:true});
         user.password = undefined;
+        user = this.makeUserReadable(user);
         JSONResponse.success(res, 'Success.', user, 200);
     } catch (error) {
         JSONResponse.error(res, "Failed to update user.", error, 404);
@@ -152,6 +158,7 @@ exports.deleteUser = async (req, res) => {
         user.deletedAt = new Date().toISOString(); // eg. '2023-02-17T12:11:15.175Z'
         await user.save();
         user.password = undefined;
+        user = this.makeUserReadable(user);
         JSONResponse.success(res, 'Success.', user, 200);
     } catch (error) {
         JSONResponse.error(res, "Failed to delete user.", error, 404);
@@ -193,6 +200,7 @@ exports.resetPassword = async(req, res, next)=>{
      user.password = password;
      await user.save();
      user.password = undefined;
+     user = this.makeUserReadable(user);
      JSONResponse.success(res, "Retrieved user info", user, 200);
   } catch (error) {
      JSONResponse.error(res, "Unable to find user", error, 404);
@@ -219,4 +227,47 @@ exports.makeUserReadable = (user) =>{
 
 }
 
+/**
+ * 
+ * @param {Document<User>} user 
+ * @returns {Partial<User>}
+ */
+function removeForWeb(user){
+    let modifiedUser = {
+        _id: user._id,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        email: user.email,
+        profile: user.profile_image,
+        mobile_number: user.mobile_number,
+        home_number: user.home_number
+
+    }
+    return modifiedUser;
+}
+/**
+ * 
+ * @param {Document<User>} user 
+ * @returns {Partial<User>}
+ */
+function removeForAdmin(user){
+    let modifiedUser = {
+        _id: user._id,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        email: user.email,
+        profile_image: user.profile_image,
+        mobile_number: user.mobile_number,
+        home_number: user.home_number,
+        status: user.status,
+    }
+    return modifiedUser;
+}
+
+function filterInactive(documents){
+    if(Array.isArray(documents)){
+        return documents.filter((document)=> document.status !== "INACTIVE")
+    }
+    return null
+}
 
