@@ -27,7 +27,7 @@ exports.getAllUsers = async (req, res, next) => {
                                 .sort({first_name: 1}) // sorts by first_name in ascending order
                                 .skip((page-1) * limit) // skips the results by a specified ammount 
                                 .limit(limit); // sets the limit on the number of results to return
-        
+        users = removeForAdmin(users);
         JSONResponse.success(res, 'Success.', users, 200);
     } catch (error) {
         JSONResponse.error(res, "Failed to get all users.", error, 404);
@@ -44,18 +44,17 @@ exports.getAllUsers = async (req, res, next) => {
 exports.loginUser = async(req, res, next)=>{
     try{
         let {platform} = req.query;
-        if(!platform) throw new Error("No platform provided");
-        platform = platform.toLowerCase();
+        platform = checkForPlatform(platform);
         let {email, password} = req.body;
         if(Object.keys(req.body).length == 0) throw new Error("No data passed to login");
-        const user = await User.findOne({email: email});
+        let user = await User.findOne({email: email});
         if(!user) throw new Error("No user matches this email");
         let passCheck = await user.isCorrectPassword(password);
         if(!passCheck)throw new Error("Invalid password");
-        user.password = undefined;
+        user = this.makeUserReadable(user);
+        console.log(user)
         let token = JWTHelper.genToken({id: user._id, role: user.role, email: user.email}, "900");
-
-        user.role = (platform == "web") ? undefined : user.role;
+        user = ModifyUserAgainstPlatform(platform, user);
         JSONResponse.success(res, "Successfully found user", {user, token}, 200);
     }catch(error){
         JSONResponse.error(res, "Unable to login", error, 404);
@@ -74,11 +73,15 @@ exports.loginUser = async(req, res, next)=>{
  */
 exports.getUserById = async (req, res, next) => {
     try {
+        let {platform} = req.query;
+        platform = checkForPlatform(platform);
         let user_id = req.params.user_id;
         if(!mongoose.isValidObjectId(user_id)) throw new Error("Invalid format of user_id");
         let user = await User.findById(user_id);
         if(!user) throw new Error("No user found with this ID");
-        user.password = undefined;
+        user = this.makeUserReadable(user);
+        user = ModifyUserAgainstPlatform(platform, user);
+
         JSONResponse.success(res, 'Success.', user, 200);
     } catch (error) {
         JSONResponse.error(res, "Failed to get user by id.", error, 404);
@@ -95,21 +98,25 @@ exports.getUserById = async (req, res, next) => {
 exports.createUser = async (req, res, next) => {
     try {
         let {platform} = req.query;
-        if(!platform) throw new Error("No platform provided");
-        platform = platform.toLowerCase();
+        platform = checkForPlatform(platform);
         let userData = req.body;
+        console.log(platform)
+
         userData.profile_image = (req.file) ? req.file.path: undefined;
+        // update role if it is provided by the admin
+        if(platform.toLowerCase() == "admin"){
+            userData.role = roleMap.get(userData.role.toUpperCase());
+        }else{
+            userData.role = undefined;
+        }
         let user = new User(userData); // creates model from userdata
         let duplicated = await user.checkDuplicate();
         if(duplicated) throw new Error("A user with that email already exists");
+
         user = await user.save(); // saves model 
-        user.password = undefined;
         user = this.makeUserReadable(user);
-        if(platform === "web"){
-            user = removeForWeb(user);
-        }else if(platform === "admin"){
-            user = removeForAdmin(user);
-        }
+        user = ModifyUserAgainstPlatform(platform, user);
+
         JSONResponse.success(res, 'Success.', user, 201);   
     } catch (error) {
         JSONResponse.error(res, "Failed to create user.", error, 404);
@@ -125,6 +132,8 @@ exports.createUser = async (req, res, next) => {
  */
 exports.updateUser = async (req, res) => {
     try {
+        let {platform} = req.query;
+        platform = checkForPlatform(platform);
         let user_id = req.params.user_id;
         let userData = req.body;
         if(Object.keys(userData).length == 0) throw new Error("No data passed to update user")
@@ -132,8 +141,8 @@ exports.updateUser = async (req, res) => {
         userData.password = undefined;
         if(!mongoose.isValidObjectId(user_id)) throw new Error("Invalid format of user_id");
         let user = await User.findByIdAndUpdate(user_id,userData, {new:true});
-        user.password = undefined;
         user = this.makeUserReadable(user);
+        user = ModifyUserAgainstPlatform(platform, user);
         JSONResponse.success(res, 'Success.', user, 200);
     } catch (error) {
         JSONResponse.error(res, "Failed to update user.", error, 404);
@@ -149,16 +158,18 @@ exports.updateUser = async (req, res) => {
  */
 exports.deleteUser = async (req, res) => {
     try {
+        let {platform} = req.query;
+        platform = checkForPlatform(platform);
         let user_id = req.params.user_id;
         if(!mongoose.isValidObjectId(user_id)) throw new Error("User ID passed is not valid")
         let user = await User.findById(user_id);
         if(!user) throw new Error("No user found with this ID");
-        user.status = "INACTIVE";
+        user.status = roleMap.get("INACTIVE"); // finds the value that we set for inactive user then updates status.
         // sets the deleted at the a date string that matches the one generated by the database timestamp.
         user.deletedAt = new Date().toISOString(); // eg. '2023-02-17T12:11:15.175Z'
         await user.save();
-        user.password = undefined;
         user = this.makeUserReadable(user);
+        user = ModifyUserAgainstPlatform(platform, user);
         JSONResponse.success(res, 'Success.', user, 200);
     } catch (error) {
         JSONResponse.error(res, "Failed to delete user.", error, 404);
@@ -173,6 +184,8 @@ exports.deleteUser = async (req, res) => {
  */
 exports.requestPasswordReset = async (req, res, next) => {
     try{
+        let {platform} = req.query;
+        platform = checkForPlatform(platform);
         let {email, redirectLink} = req.body;
         let users = await User.find({email: email});
         if(users.length === 0) throw new Error("No user exists with that email");
@@ -191,6 +204,8 @@ exports.requestPasswordReset = async (req, res, next) => {
  */
 exports.resetPassword = async(req, res, next)=>{
  try{
+    let {platform} = req.query;
+    platform = checkForPlatform(platform);
     let {password} = req.body;
     if(!password) throw new Error("No password to update");
     let {user_id} = req.query;
@@ -199,8 +214,8 @@ exports.resetPassword = async(req, res, next)=>{
      if (!user) throw new Error("User not found with this id");
      user.password = password;
      await user.save();
-     user.password = undefined;
      user = this.makeUserReadable(user);
+     user = ModifyUserAgainstPlatform(platform, user);
      JSONResponse.success(res, "Retrieved user info", user, 200);
   } catch (error) {
      JSONResponse.error(res, "Unable to find user", error, 404);
@@ -233,7 +248,8 @@ exports.makeUserReadable = (user) =>{
  * @returns {Partial<User>}
  */
 function removeForWeb(user){
-    let modifiedUser = {
+
+    modifiedUser = {
         _id: user._id,
         first_name: user.first_name,
         last_name: user.last_name,
@@ -251,7 +267,24 @@ function removeForWeb(user){
  * @returns {Partial<User>}
  */
 function removeForAdmin(user){
-    let modifiedUser = {
+    if(Array.isArray(user)){
+        let modifiedUsers = user.map((user)=> {
+            if(user.status === statusMap.get("INACTIVE")){
+                return {
+                    _id: user._id,
+                    first_name: user.first_name,
+                    last_name: user.last_name,
+                    email: user.email,
+                    profile_image: user.profile_image,
+                    mobile_number: user.mobile_number,
+                    home_number: user.home_number,
+                    status: user.status,
+                }
+            }
+        })
+        return modifiedUsers;
+    }
+    return {
         _id: user._id,
         first_name: user.first_name,
         last_name: user.last_name,
@@ -261,7 +294,7 @@ function removeForAdmin(user){
         home_number: user.home_number,
         status: user.status,
     }
-    return modifiedUser;
+
 }
 
 function filterInactive(documents){
@@ -271,3 +304,29 @@ function filterInactive(documents){
     return null
 }
 
+/**
+ * Checks for the platform if it is valid
+ * @param {string} platform The platform the request is sent from.
+ */
+function checkForPlatform(platform){
+    if(!platform) throw new Error("No platform provided");
+    platform = platform.toLowerCase();
+    console.log(platform)
+    if(platform != "web" && platform != "admin") throw new Error("Incorrect platform");
+    return platform;
+}
+
+
+/**
+ * Modify the user based on what the platform value is
+ * @param {Model<User>} user 
+ * @param {string} platform 
+ */
+function ModifyUserAgainstPlatform(platform, user){
+    if(platform === "web"){
+        user = removeForWeb(user);
+    }else if(platform === "admin"){
+        user = removeForAdmin(user);
+    }
+    return user;
+}
