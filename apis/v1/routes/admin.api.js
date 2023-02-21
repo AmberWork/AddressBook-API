@@ -22,10 +22,6 @@ router
     .get(AddressController.getAllAddresses)
 
 
-router
-.route('/users/:user_id/addresses').delete(softDeleteAddress);
-
-
     // Parishes routers
 router
     .route("/parishes")

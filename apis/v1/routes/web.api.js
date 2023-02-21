@@ -31,7 +31,7 @@ const router = express.Router();
 // ---------------
 // Based Routers
 // ---------------
-router.route('/users/:user_id').get(getUserById).put(updateUser);
+router.route('/users/:user_id').get(getUserById).put(updateUser).delete(deleteUser);
 
 router.route('/users/:user_id/addresses').get(getAllAddressByUserId).put(updateAddress);
 router.route('/addresses/:id').get(getAddressById)

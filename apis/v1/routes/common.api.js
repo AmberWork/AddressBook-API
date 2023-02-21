@@ -33,12 +33,11 @@ router
     .route('/users/address')
     .post(AddressController.createAddress)
 
-router.route('/users/:user_id')
-    .delete(AddressController.deleteUser);
+router
+    .route('/users/:user_id/addresses').delete(AddressController.softDeleteAddress);
 
 router.route('/addresses/:id/destroy')
     .delete(AddressController.destroyAddress);
-
 
 
 module.exports = router;
