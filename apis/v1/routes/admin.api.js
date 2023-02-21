@@ -19,6 +19,7 @@ router
     // Addresses routers
 router
     .route("/addresses")
+    .all(Middleware.protectedViaRole(["ADMIN"]))
     .get(AddressController.getAllAddresses)
 
 

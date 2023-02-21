@@ -16,6 +16,7 @@ const {
     softDeleteAddress,
     destroyAddress,
 } = require("../controllers/addresses.controller");
+const Middleware = require("../middlewares/middleware");
 
 // ---------------
 
@@ -31,9 +32,12 @@ const router = express.Router();
 // ---------------
 // Based Routers
 // ---------------
-router.route('/users/:user_id').get(getUserById).put(updateUser).delete(deleteUser);
 
-router.route('/users/:user_id/addresses').get(getAllAddressByUserId).put(updateAddress);
+router.route('/users/:user_id/addresses')
+.all(Middleware.protectedViaRole(["ADMIN"]))
+.get(getAllAddressByUserId)
+.put(updateAddress)
+.delete(softDeleteAddress);
 router.route('/addresses/:id').get(getAddressById)
 // ---------------
 
