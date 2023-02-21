@@ -41,6 +41,17 @@ exports.getAddressById = async (req, res, next) => {
 // get all address by user id
 exports.getAllAddressByUserId = async (req, res, next) => {
     try {
+
+        if(!mongoose.Types.ObjectId.isValid(req.params.user_id)) {
+            throw new Error('Address not found');
+        }
+
+        // if(!mongoose.Types.ObjectId.isValid(req.params.user_id)) throw new Error('Invalid format of user_id');
+        // const user = await User.findById(req.params.user_id);
+        // if(!user) throw new Error('User not found');
+        // const addresses = await Address.find({user_id: req.params.user_id});
+        
+        JSONResponse.success(res, 'Success.', addresses, 200);
         const address = await Address.find({user_id: req.params.user_id});
         JSONResponse.success(res, 'Success.', address, 200);
     } catch (error) {
@@ -92,7 +103,8 @@ exports.softDeleteAddress = async (req, res) => {
     try {
         const address = await Address.findByIdAndUpdate(req.params.id, {
             status: 'INACTIVE',
-            deletedAt: Date().toIsoString()
+            deletedAt: new Date().toIsoString()
+            
         })
         
 
