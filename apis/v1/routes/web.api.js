@@ -11,6 +11,7 @@ const {
 const {
     createAddress,
     getAddressById,
+    getAllAddressByUserId,
     updateAddress,
     softDeleteAddress,
     destroyAddress,
@@ -31,9 +32,13 @@ const router = express.Router();
 // Based Routers
 // ---------------
 router.route('/users/:user_id').get(getUserById).put(updateUser).delete(deleteUser);
-router.route('/users/:id/addresses').get(getAddressById).post(createAddress).put(updateAddress).delete(softDeleteAddress);
+
+router.route('/users/:user_id/addresses').get(getAllAddressByUserId).put(updateAddress).delete(softDeleteAddress);
+router.route('/users/address').post(createAddress)
+router.route('/addresses/:id').get(getAddressById)
 router.route('/addresses/:id/destroy').delete(destroyAddress);
 // ---------------
+
 
 
 module.exports = router;

@@ -2,6 +2,7 @@
 // Based Imports
 // ---------------
 const Address = require('../../../schemas/address.schema');
+const Parish = require('../../../schemas/parish.schema');
 const { JSONResponse } = require('../../../utilities/response.utility');
 
 const User = require('../../../schemas/user.schema');
@@ -12,7 +13,7 @@ const mongoose = require('mongoose');
 
 
 // get all Address
-exports.getAllAddress = async (req, res, next) => {
+exports.getAllAddresses = async (req, res, next) => {
     try {
         const addresses = await Address.find();
         
@@ -37,6 +38,17 @@ exports.getAddressById = async (req, res, next) => {
 }
 
 
+// get all address by user id
+exports.getAllAddressByUserId = async (req, res, next) => {
+    try {
+        const address = await Address.find({user_id: req.params.user_id});
+        JSONResponse.success(res, 'Success.', address, 200);
+    } catch (error) {
+        JSONResponse.error(res, 'Error.', error, 404);
+    }
+}
+
+
 
 // create address
 exports.createAddress = async (req, res, next) => {
@@ -46,7 +58,7 @@ exports.createAddress = async (req, res, next) => {
         if(!address) throw new Error('Address not created');
 
         // check if the user_id is of the ObjectID type
-         if(!mongoose.Types.ObjectId.isValid(user_id)) {
+         if(!mongoose.Types.ObjectId.isValid(req.params.user_id)) {
             throw new Error('User id is not valid');
          }
          
@@ -114,25 +126,62 @@ exports.destroyAddress = async (req, res) => {
 
 
 
+// get all Parish
+exports.getAllParish = async (req, res, next) => {
+    try {
+        const parishes = await Parish.find();
+        
+        JSONResponse.success(res, 'Success.', parishes, 200);
+    } catch (error) {
+        JSONResponse.error(res, 'Error.', error, 404);
+    }
+}
+
+// get Parish by id
+exports.getParishById = async (req, res, next) => {
+    try {
+        const parish = await Parish.findById(req.params.id);
+        JSONResponse.success(res, 'Success.', parish, 200);
+    } catch (error) {
+        JSONResponse.error(res, 'Error.', error, 404);
+    }
+}
+
+// create Parish
+exports.createParish = async (req, res, next) => {
+    try {
+        const parish = await Parish.create(req.body)
+        
+        if(!parish) throw new Error('Parish not created');
+        JSONResponse.success(res, 'Success.', parish, 201);
+    } catch (error) {
+        JSONResponse.error(res, 'Error.', error, 404);
+    }
+}
+
+// update Parish
+exports.updateParish = async (req, res) => {
+    try {
+        const parish = await Parish.findByIdAndUpdate(req.params.id, req.body, { new: true})
+        if (!parish) throw new Error('Parish not updated');
+        JSONResponse.success(res, 'Success.', parish, 200);
+    } catch (error) {
+        JSONResponse.error(res, 'Error.', error, 404);
+    }
+}
 
 
-// delete address
-// exports.deleteAddress = async (req, res) => {
-//     let address;
-//     try {
-//         if (req.query.force){
-//             address = await Address.findByIdAndDelete(req.params.id);
-//         } else {
-//             address = await Address.findByIdAndUpdate(req.params.id, {isDeleted : true});
-//         }
+// delete Parish
+exports.destroyParish = async (req, res) => {
+    try {
+        const parish = await Parish.findByIdAndDelete(req.params.id);
+        if (!parish) throw new Error('Parish not deleted');
+        JSONResponse.success(res, 'Success.', parish, 200);
+    } catch (error) {
+        JSONResponse.error(res, 'Error.', error, 404);
+    }
+}
 
-//         if(!address) throw new Error('Address not deleted');
-
-//         JSONResponse.success(res, 'Success.', address, 200);
-//     } catch (error) {
-//         JSONResponse.error(res, 'Error.', error, 404);
-//     }
-// }
 
 
 
