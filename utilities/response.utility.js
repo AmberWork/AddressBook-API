@@ -4,7 +4,7 @@ class JSONResponse {
           status: status ?? res.statusCode,
           message,
           data,
-          error: {},
+          error: null,
        });
     }
     
