@@ -23,7 +23,6 @@ router
     .get(AddressController.getAllAddresses)
 
 
-
     // Parishes routers
 router
     .route("/parishes")

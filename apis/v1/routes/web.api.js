@@ -33,6 +33,7 @@ const router = express.Router();
 // Based Routers
 // ---------------
 
+
 router.route('/users/:user_id/addresses')
 .all(new Middleware().protectedViaRole(["ADMIN"]))
 .get(getAllAddressByUserId)

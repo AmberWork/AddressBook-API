@@ -33,6 +33,7 @@ router
     .route('/address')
     .post(AddressController.createAddress)
 
+
 router.route('/users/:user_id')
     .all(new Middleware().protectedViaRole(["USER","ADMIN"]))
     .get(UserController.getUserById).put(UserController.updateUser)
@@ -41,7 +42,6 @@ router.route('/users/:user_id')
 router.route('/addresses/:id/destroy')
     .all(new Middleware().protectedViaRole(["USER","ADMIN"]))
     .delete(AddressController.destroyAddress);
-
 
 
 module.exports = router;
