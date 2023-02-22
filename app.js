@@ -20,7 +20,8 @@ const apiVersion_1 = require('./apis/v1/root.api');
 // ---------------
 app.use(cors('*'))
 app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static("/uploads")) // set static files to be served using this folder
 // ---------------
 
 
