@@ -30,7 +30,7 @@ router.route("/resetPassword")
 
     // address
 router
-    .route('/address')
+    .route('/addresses')
     .post(AddressController.createAddress)
 
 
