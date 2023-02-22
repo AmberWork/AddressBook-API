@@ -7,7 +7,7 @@ const AddressController = require("../controllers/addresses.controller");
 const Middleware = require("../middlewares/middleware");
 router
     .route("/users")
-    .all(Middleware.protectedViaRole(["ADMIN"]))
+    .all(new Middleware().protectedViaRole(["ADMIN"]))
     .get(UserController.getAllUsers)
 // ---------------
 
@@ -19,6 +19,7 @@ router
     // Addresses routers
 router
     .route("/addresses")
+    .all(new Middleware().protectedViaRole(["ADMIN"]))
     .get(AddressController.getAllAddresses)
 
 
