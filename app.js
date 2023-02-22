@@ -12,6 +12,7 @@ const app = express();
 // ---------------
 // Gets version one of the api
 const apiVersion_1 = require('./apis/v1/root.api');
+const { JSONResponse } = require('./utilities/response.utility');
 // ---------------
 
 
@@ -29,7 +30,14 @@ app.use(express.static("/uploads")) // set static files to be served using this 
 // Routes
 // ---------------
 // tells the server to user "/api/v1" to prefix the api version_1 routes
-app.use('/api/v1/', apiVersion_1)
+app.use('/api/v1/', apiVersion_1);
+
+
+// Global Error handler
+app.use((error, req, res, next)=>{
+    console.error(error.stack);
+    JSONResponse.error(res, "There has been an issue with the Server", error, 500);
+})
 // ---------------
 
 
