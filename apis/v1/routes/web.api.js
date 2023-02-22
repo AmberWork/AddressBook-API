@@ -34,7 +34,7 @@ const router = express.Router();
 // ---------------
 
 router.route('/users/:user_id/addresses')
-.all(Middleware.protectedViaRole(["ADMIN"]))
+.all(new Middleware().protectedViaRole(["ADMIN"]))
 .get(getAllAddressByUserId)
 .put(updateAddress)
 .delete(softDeleteAddress);
