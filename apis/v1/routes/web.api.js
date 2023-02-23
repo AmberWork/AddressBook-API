@@ -34,11 +34,10 @@ const router = express.Router();
 // ---------------
 
 router.route('/users/:user_id/addresses')
-.all(new Middleware().protectedViaRole(["ADMIN"]))
+.all(new Middleware().protectedViaRole(["USER","ADMIN"]))
 .get(getAllAddressByUserId)
 .put(updateAddress)
 .delete(softDeleteAddress);
-router.route('/addresses/:id').get(getAddressById)
 // ---------------
 
 

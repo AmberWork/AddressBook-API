@@ -31,7 +31,14 @@ router.route("/resetPassword")
     // address
 router
     .route('/addresses')
+    .all(new Middleware().protectedViaRole(["USER","ADMIN"]))
     .post(AddressController.createAddress)
+
+    // Admins should also be able to go to this route
+router
+    .route('/addresses/:id')
+    .all(new Middleware().protectedViaRole(["USER","ADMIN"]))
+    .get(AddressController.getAddressById)
 
 
 router.route('/users/:user_id')
