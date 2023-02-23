@@ -22,7 +22,7 @@ const { JSONResponse } = require('./utilities/response.utility');
 app.use(cors('*'))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static("/uploads")) // set static files to be served using this folder
+app.use("/uploads",express.static("uploads")) // set static files to be served using this folder
 // ---------------
 
 
