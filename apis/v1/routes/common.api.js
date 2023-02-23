@@ -43,5 +43,4 @@ router.route('/addresses/:id/destroy')
     .all(new Middleware().protectedViaRole(["USER","ADMIN"]))
     .delete(AddressController.destroyAddress);
 
-
 module.exports = router;
