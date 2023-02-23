@@ -60,7 +60,7 @@ class Middleware{
         try{
             let token = getTokenFromBearer(req);
             res.locals.token = token;
-            res.locals.decoded = JWT.decode(token);
+            res.locals.decoded = JWT.verify(token,process.env.JWT_SECRET_KEY);
             res.locals.user_role = res.locals.decoded.role;
             if(!this.selectedRoleList.includes(res.locals.user_role)) {
                 return JSONResponse.error(res, "Unauthorized Access Attempted","Not the correct Auth Level", 403);
