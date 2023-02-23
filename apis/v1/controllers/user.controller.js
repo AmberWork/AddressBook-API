@@ -17,12 +17,13 @@ const JWTHelper = require('../../../utilities/token.utility');
  */
 exports.getAllUsers = async (req, res, next) => {
     try {
-        let {page, limit} = req.query;
-
+        let {page, limit, role} = req.query;
+        role = (role) ? role.toUpperCase() : 0;
+        role = (roleMap.get(role) != undefined) ? roleMap.get(role) : 0;
         page = (page) ? page : 1; // defaults  page to 1
         limit = (limit) ? limit : 10; // defaults limit to 10;
         limit = parseInt(limit); // ensures that limit is a number;
-        let users = await User.find()
+        let users = await User.find({role: role})
                                 .ne("status", statusMap.get("INACTIVE")) // dont show inactive users.
                                 .select("-password") // remove password from each record. 
                                 .sort({first_name: 1}) // sorts by first_name in ascending order
