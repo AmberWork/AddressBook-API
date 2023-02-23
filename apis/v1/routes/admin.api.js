@@ -26,7 +26,6 @@ router
     // Parishes routers
 router
     .route("/parishes")
-    .get(AddressController.getAllParish)
     .post(AddressController.createParish)
     
 

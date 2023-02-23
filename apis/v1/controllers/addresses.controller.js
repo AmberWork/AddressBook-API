@@ -15,7 +15,18 @@ const mongoose = require('mongoose');
 // get all Address
 exports.getAllAddresses = async (req, res, next) => {
     try {
-        const addresses = await Address.find();
+
+        // pagination
+        let { page, limit } = req.query;
+
+        page = (page) ? page : 1; // defaults  page to 1
+        limit = (limit) ? limit : 10; // defaults limit to 10;
+        limit = parseInt(limit); // ensures that limit is a number;
+        let skip = (page - 1) * limit; // skips the results by a specified ammount 
+        
+        const addresses = await Address.find()
+        .skip(skip) //call the skip variable
+        .limit(limit); // sets the limit on the number of results to return
         
         JSONResponse.success(res, 'Success.', addresses, 200);
     } catch (error) {

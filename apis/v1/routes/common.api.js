@@ -34,15 +34,18 @@ router
     .post(AddressController.createAddress)
 
 router
+    .route('/addresses')
+    .get(AddressController.getAllParish)
+
+router
     .route('/users/:user_id/addresses').delete(AddressController.softDeleteAddress);
 router.route('/users/:user_id')
     .all(Middleware.protectedViaRole(["USER","ADMIN"]))
-    .get(getUserById).put(updateUser)
-    .delete(AddressController.deleteUser);
+    .get(UserController.getUserById).put(UserController.updateUser)
+    .delete(UserController.deleteUser);
 
 router.route('/addresses/:id/destroy')
     .all(Middleware.protectedViaRole(["USER","ADMIN"]))
     .delete(AddressController.destroyAddress);
-
 
 module.exports = router;
