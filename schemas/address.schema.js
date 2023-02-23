@@ -8,7 +8,7 @@ const addressSchema = new Schema({
     city: {type: String, required: [true, "City of address is required"]},
     parish: {type: Schema.Types.ObjectId, ref: "Parish", required: [true, "Parish of address is required"]},
     status: {type: Number, default:0},
-    deletedAt: {type: Date, default: null}
+    deletedAt: {type: Schema.Types.Date, default: null}
 }, {timestamps: true});
 
 
