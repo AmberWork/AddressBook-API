@@ -39,6 +39,8 @@ router
     .route('/addresses/:id')
     .all(new Middleware().protectedViaRole(["USER","ADMIN"]))
     .get(AddressController.getAddressById)
+    .put(AddressController.updateAddress)
+    .delete(AddressController.softDeleteAddress);
 
 
 router.route('/users/:user_id')
@@ -49,5 +51,8 @@ router.route('/users/:user_id')
 router.route('/addresses/:id/destroy')
     .all(new Middleware().protectedViaRole(["USER","ADMIN"]))
     .delete(AddressController.destroyAddress);
+
+router.route("/parishes")
+    .get(AddressController.getAllParish)
 
 module.exports = router;
