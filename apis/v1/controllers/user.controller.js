@@ -11,11 +11,15 @@ const JWTHelper = require('../../../utilities/token.utility');
 
 
 
-
+/**
+ * @description Gets all the users stored in the database.
+ * @param {Request} req The request that has been sent to the server
+ * @param {Response} res The response that the server should respond
+ * @param {Next} next The next middleware in the sequence
+ */
 exports.getAllUsers = async (req, res) => {
     try {
-        let {platform} = req.query;
-        platform = checkForPlatform(platform);
+
         let role = req.query.role;
         let status = req.query.status;
         status = (status) ? status.toUpperCase() : undefined;
@@ -98,32 +102,6 @@ exports.getAllUsers = async (req, res) => {
   };
 
 
-/**
- * @description Gets all the users stored in the database.
- * @param {Request} req The request that has been sent to the server
- * @param {Response} res The response that the server should respond
- * @param {Next} next The next middleware in the sequence
- */
-exports.getAllUser = async (req, res, next) => {
-    try {
-        let {page, limit, role} = req.query;
-        role = (role) ? role.toUpperCase() : 0;
-        role = (roleMap.get(role) != undefined) ? roleMap.get(role) : 0;
-        page = (page) ? page : 1; // defaults  page to 1
-        limit = (limit) ? limit : 10; // defaults limit to 10;
-        limit = parseInt(limit); // ensures that limit is a number;
-        let users = await User.find({role: role})
-                                .select("-password") // remove password from each record. 
-                                .sort({first_name: 1}) // sorts by first_name in ascending order
-                                .skip((page-1) * limit) // skips the results by a specified ammount 
-                                .limit(limit); // sets the limit on the number of results to return
-
-        users = removeForAdmin(users);
-        JSONResponse.success(res, 'Success.', users, 200);
-    } catch (error) {
-        JSONResponse.error(res, "Failed to get all users.", error, 404);
-    }
-}
 
 
 /**
