@@ -13,39 +13,34 @@ router
 
 router
     .route("/users/:user_id")
-    .all(Middleware.protectedViaRole(["ADMIN", "USER"]))
+    .all(new Middleware().protectedViaRole(["ADMIN", "USER"]))
     .get(UserController.getUserById)
     .patch(UserController.updateUser)
     .delete(UserController.deleteUser)
 
 
 router.route("/requestPasswordReset")
-    .all(Middleware.protectedViaRole(["USER","ADMIN"]))
+    .all(new Middleware().protectedViaRole(["USER","ADMIN"]))
     .post(UserController.requestPasswordReset);
 
 router.route("/resetPassword")
-    .all(Middleware.protectedViaRole(["USER","ADMIN"]))
+    .all(new Middleware().protectedViaRole(["USER","ADMIN"]))
     .post(UserController.resetPassword);
     
 
     // address
 router
-    .route('/users/address')
+    .route('/addresses')
     .post(AddressController.createAddress)
 
-router
-    .route('/addresses')
-    .get(AddressController.getAllParish)
 
-router
-    .route('/users/:user_id/addresses').delete(AddressController.softDeleteAddress);
 router.route('/users/:user_id')
-    .all(Middleware.protectedViaRole(["USER","ADMIN"]))
+    .all(new Middleware().protectedViaRole(["USER","ADMIN"]))
     .get(UserController.getUserById).put(UserController.updateUser)
-    .delete(UserController.deleteUser);
+    .delete(AddressController.softDeleteAddress);
 
 router.route('/addresses/:id/destroy')
-    .all(Middleware.protectedViaRole(["USER","ADMIN"]))
+    .all(new Middleware().protectedViaRole(["USER","ADMIN"]))
     .delete(AddressController.destroyAddress);
 
 module.exports = router;

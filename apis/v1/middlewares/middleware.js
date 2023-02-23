@@ -8,7 +8,7 @@ class Middleware{
     /**
      * @type {String[]}
      */
-    static selectedRoleList = [];
+    selectedRoleList = [];
 
     /**
      * ### Description
@@ -17,7 +17,7 @@ class Middleware{
      * @param {Response} res 
      * @param {*} next 
      */
-    static protected = async (req, res, next) => {
+    protected = async (req, res, next) => {
         try{
             // gets the authorization property of the header
             const bearerHeader = req.headers['authorization'];
@@ -43,26 +43,25 @@ class Middleware{
      * @param {Array} roleArray 
      * @returns {Function} Function which accepts req, res, next to act as middleware to protect route.
      */
-    static protectedViaRole = (roleArray) =>{
+    protectedViaRole = (roleArray) =>{
         try{
             if(isValidAuthLevel(roleArray)){
+                
                 this.selectedRoleList = roleArray;
                 return this.middleware;
             }
              
         }catch(error){
-            console.log(this.selectedRoleList)
-
-            console.log(error.stack)
+            throw new Error(error)
         }
         
     }
-    static middleware = (req, res,next) =>{
+    middleware = (req, res,next) =>{
         try{
             let token = getTokenFromBearer(req);
             res.locals.token = token;
-            res.locals.decoded = JWT.decode(token);
-            res.locals.user_role = getKeyFromValue(roleMap, res.locals.decoded.role);
+            res.locals.decoded = JWT.verify(token,process.env.JWT_SECRET_KEY);
+            res.locals.user_role = res.locals.decoded.role;
             if(!this.selectedRoleList.includes(res.locals.user_role)) {
                 return JSONResponse.error(res, "Unauthorized Access Attempted","Not the correct Auth Level", 403);
             }
@@ -77,8 +76,6 @@ class Middleware{
 }
 
 function userMatchesAccount(req, res, next){
-    console.log(res.locals.decoded)
-    console.log(req.params.user_id)
     if(req.params.user_id != res.locals.decoded.id && res.locals.user_role != "ADMIN") throw new Error("User Does not have permission to view");
     return true
 }
