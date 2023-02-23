@@ -23,7 +23,8 @@ exports.getAllUsers = async (req, res, next) => {
         limit = (limit) ? limit : 10; // defaults limit to 10;
         limit = parseInt(limit); // ensures that limit is a number;
         let users = await User.find()
-                                .select("-password")
+                                .ne("status", statusMap.get("INACTIVE")) // dont show inactive users.
+                                .select("-password") // remove password from each record. 
                                 .sort({first_name: 1}) // sorts by first_name in ascending order
                                 .skip((page-1) * limit) // skips the results by a specified ammount 
                                 .limit(limit); // sets the limit on the number of results to return
@@ -47,12 +48,11 @@ exports.loginUser = async(req, res, next)=>{
         platform = checkForPlatform(platform);
         let {email, password} = req.body;
         if(Object.keys(req.body).length == 0) throw new Error("No data passed to login");
-        let user = await User.findOne({email: email});
+        let user = await User.findOne({email: email}).ne("status", statusMap.get("INACTIVE")); // only finds users who's status is not INACTIVE.
         if(!user) throw new Error("No user matches this email");
         let passCheck = await user.isCorrectPassword(password);
         if(!passCheck)throw new Error("Invalid password");
         user = this.makeUserReadable(user);
-        console.log(user)
         let token = JWTHelper.genToken({id: user._id, role: user.role, email: user.email}, "900");
         user = ModifyUserAgainstPlatform(platform, user);
         JSONResponse.success(res, "Successfully found user", {user, token}, 200);
@@ -77,7 +77,7 @@ exports.getUserById = async (req, res, next) => {
         platform = checkForPlatform(platform);
         let user_id = req.params.user_id;
         if(!mongoose.isValidObjectId(user_id)) throw new Error("Invalid format of user_id");
-        let user = await User.findById(user_id);
+        let user = await User.findById(user_id).ne("status", statusMap.get("INACTIVE"));
         if(!user) throw new Error("No user found with this ID");
         user = this.makeUserReadable(user);
         user = ModifyUserAgainstPlatform(platform, user);
@@ -135,7 +135,7 @@ exports.updateUser = async (req, res) => {
         userData.password = undefined;
         userData = checkRoleAndStatusAgainstPlatform(userData, platform);
         if(!mongoose.isValidObjectId(user_id)) throw new Error("Invalid format of user_id");
-        let user = await User.findByIdAndUpdate(user_id,userData, {new:true});
+        let user = await User.findByIdAndUpdate(user_id,userData, {new:true}).ne("status", statusMap.get("INACTIVE"));
         if(!user) throw new Error("No user found with this ID")
         user = this.makeUserReadable(user);
         user = ModifyUserAgainstPlatform(platform, user);
@@ -158,7 +158,7 @@ exports.deleteUser = async (req, res) => {
         platform = checkForPlatform(platform);
         let user_id = req.params.user_id;
         if(!mongoose.isValidObjectId(user_id)) throw new Error("User ID passed is not valid")
-        let user = await User.findById(user_id);
+        let user = await User.findById(user_id).ne("status", statusMap.get("INACTIVE"));
         if(!user) throw new Error("No user found with this ID");
         if(user.status === statusMap.get("INACTIVE")) throw new Error ("User is already Deleted")
         user.status = statusMap.get("INACTIVE"); // finds the value that we set for inactive user then updates status.
@@ -184,7 +184,7 @@ exports.requestPasswordReset = async (req, res, next) => {
         let {platform} = req.query;
         platform = checkForPlatform(platform);
         let {email, redirectLink} = req.body;
-        let user = await User.findOne({email: email});
+        let user = await User.findOne({email: email}).ne("status", statusMap.get("INACTIVE"));
         if(!user) throw new Error("No user exists with that email");
         await user.requestPasswordReset(redirectLink);
         JSONResponse.success(res, "Successfully sent password reset request", {},200);
@@ -206,7 +206,7 @@ exports.resetPassword = async(req, res, next)=>{
     if(!password) throw new Error("No password to update");
     let {user_id} = req.query;
     // Ensures that only the password will be updated on this route.
-     let user = await User.findOne({_id: user_id});
+     let user = await User.findOne({_id: user_id}).ne("status", statusMap.get("INACTIVE"));
      if (!user) throw new Error("User not found with this id");
      user.password = password;
      await user.save();
