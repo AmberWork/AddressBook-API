@@ -9,13 +9,102 @@ const JWTHelper = require('../../../utilities/token.utility');
 // ---------------
 
 
+
+
+
+exports.getAllUsers = async (req, res) => {
+    try {
+        let {platform} = req.query;
+        platform = checkForPlatform(platform);
+        let role = req.query.role;
+        let status = req.query.status;
+        status = (status) ? status.toUpperCase() : undefined;
+        status = (statusMap.has(status)) ? statusMap.get(status) : undefined;
+        role = (role) ? role.toUpperCase() : undefined
+        role = (roleMap.has(role)) ? roleMap.get(role): undefined;
+      // declare the format of the query params
+      const searchQuery = {
+        first_name: req.query.firstName,
+        last_name: req.query.lastName,
+        email: req.query.email,
+        role: role,
+        status: status,
+      };
+      
+      var searchResult = [];
+      // remove the params that are undefined or have empty field request
+      Object.keys(searchQuery).forEach((search) => {
+        if (searchQuery[search] == undefined || (searchQuery[search] == "" && searchQuery[search]!=0)) {
+            if(search !== "role" || search !== "status") 
+          delete searchQuery[search];
+        }
+        // boolean cannot do regex operations, hence the need to format is differently
+        if (searchQuery[search] == "true" || searchQuery[search] == "false") {
+          searchResult.push({ [search]: searchQuery[search] });
+          delete searchQuery[search];
+        }
+      });
+  
+      // pagination
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+      const startIndex = (page - 1) * limit;
+  
+      // format the query for partial search in the database
+      Object.keys(searchQuery).forEach((search) => {
+        if(search == "role") {
+            searchResult.push({"role": {$eq: searchQuery[search]}});
+        }else if(search == "status"){
+            searchResult.push({"status": {$eq: searchQuery[search]}});
+        }else
+        searchResult.push({
+          [search]: { $regex: searchQuery[search], $options: "i" },
+        });
+      });
+  
+      // sorting by order
+      const sortField = req.query.sortField || "_id";
+      const sortOrder = req.query.sortOrder || "des";
+      const sortObj = {};
+      sortObj[sortField] = sortOrder === "asc" ? 1 : -1;
+  
+      let users = await User.aggregate(
+          searchResult.length ?
+             searchResult.map((result) => {
+                  return {$match: result};
+              })
+          :
+          []
+      )
+      .append([
+        {$sort : sortObj},
+        {$skip : startIndex},
+        {$limit : limit},
+    ]).match({status : {$ne: statusMap.get("INACTIVE")}}).project({password: 0}); // removes documents that are inactive
+      users = this.makeUserReadable(users);
+      JSONResponse.success(
+        res,
+        "Success",
+        {
+          users: removeForAdmin(users),
+          page: page,
+          limit: limit,
+        },
+        200
+      );
+    } catch (error) {
+      JSONResponse.error(res, "Failure handling user model.", error, 500);
+    }
+  };
+
+
 /**
  * @description Gets all the users stored in the database.
  * @param {Request} req The request that has been sent to the server
  * @param {Response} res The response that the server should respond
  * @param {Next} next The next middleware in the sequence
  */
-exports.getAllUsers = async (req, res, next) => {
+exports.getAllUser = async (req, res, next) => {
     try {
         let {page, limit, role} = req.query;
         role = (role) ? role.toUpperCase() : 0;
@@ -24,11 +113,11 @@ exports.getAllUsers = async (req, res, next) => {
         limit = (limit) ? limit : 10; // defaults limit to 10;
         limit = parseInt(limit); // ensures that limit is a number;
         let users = await User.find({role: role})
-                                .ne("status", statusMap.get("INACTIVE")) // dont show inactive users.
                                 .select("-password") // remove password from each record. 
                                 .sort({first_name: 1}) // sorts by first_name in ascending order
                                 .skip((page-1) * limit) // skips the results by a specified ammount 
                                 .limit(limit); // sets the limit on the number of results to return
+
         users = removeForAdmin(users);
         JSONResponse.success(res, 'Success.', users, 200);
     } catch (error) {
@@ -102,6 +191,7 @@ exports.createUser = async (req, res, next) => {
         platform = checkForPlatform(platform);
         let userData = req.body;
         userData.profile_image = (req.file) ? req.file.path: undefined;
+        // if(!(Object.keys(userData).length == 0)) throw new Error("No data passed to the user")
         // update role if it is provided by the admin
         userData = checkRoleAndStatusAgainstPlatform(userData, platform);
         let user = new User(userData); // creates model from userdata
@@ -222,23 +312,40 @@ exports.resetPassword = async(req, res, next)=>{
 
 /**
  * 
- * @param {mongoose.Model<User>} user 
+ * @param {mongoose.Model<User> | Array<Model<User>>} user 
  * @returns 
  */
 exports.makeUserReadable = (user) =>{
-    let roleKey = getKeyFromValue(roleMap, user.role);
-    let statusKey = getKeyFromValue(statusMap, user.status)
-    if(!roleKey) throw new Error("Invalid role type on user");
-    if(!statusKey) throw new Error("Invalid status type on user");
-    let readableUser = {
-        ...user._doc,  // used this destructuring method, tried set however it would not update the value, could be due to conflicting types number vs string.
-        role: roleKey, 
-        status: statusKey,
+    let readableUser;
+    if(Array.isArray(user)){
+        readableUser = user.map((doc)=>{
+        let {roleKey, statusKey} = checkAndMakeReadableRoleAndStatus(doc)
+        return {
+            ...doc,  // used this destructuring method, tried set however it would not update the value, could be due to conflicting types number vs string.
+            role: roleKey, 
+            status: statusKey,
+        }
+    })
+        
+    }else{
+        let {roleKey, statusKey} = checkAndMakeReadableRoleAndStatus(user);
+        readableUser = {
+            ...user._doc,  // used this destructuring method, tried set however it would not update the value, could be due to conflicting types number vs string.
+            role: roleKey, 
+            status: statusKey,
+        }
     }
     return readableUser;
 
 }
 
+function checkAndMakeReadableRoleAndStatus(user){
+    let roleKey = getKeyFromValue(roleMap, user.role);
+    let statusKey = getKeyFromValue(statusMap, user.status)
+    if(!roleKey) throw new Error("Invalid role type on user");
+    if(!statusKey) throw new Error("Invalid status type on user");
+    return {statusKey, roleKey}
+}
 /**
  * 
  * @param {Document<User>} user 
@@ -266,8 +373,7 @@ function removeForWeb(user){
 function removeForAdmin(user){
     if(Array.isArray(user)){
         let modifiedUsers = user.map((user)=> {
-            if(user.status === statusMap.get("INACTIVE")){
-                return {
+            return {
                     _id: user._id,
                     first_name: user.first_name,
                     last_name: user.last_name,
@@ -277,11 +383,10 @@ function removeForAdmin(user){
                     home_number: user.home_number,
                     status: user.status,
                 }
-            }
-        })
+            
+            }).filter((user)=> user != null)
         return modifiedUsers;
-    }
-    return {
+    }else return {
         _id: user._id,
         first_name: user.first_name,
         last_name: user.last_name,
