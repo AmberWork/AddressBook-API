@@ -19,6 +19,7 @@ router
     .delete(UserController.deleteUser)
 
 
+    // Password
 router.route("/requestPasswordReset")
     .all(new Middleware().protectedViaRole(["USER","ADMIN"]))
     .post(UserController.requestPasswordReset);
@@ -42,11 +43,6 @@ router
     .put(AddressController.updateAddress)
     .delete(AddressController.softDeleteAddress);
 
-
-router.route('/users/:user_id')
-    .all(new Middleware().protectedViaRole(["USER","ADMIN"]))
-    .get(UserController.getUserById).put(UserController.updateUser)
-    .delete(AddressController.softDeleteAddress);
 
 router.route('/addresses/:id/destroy')
     .all(new Middleware().protectedViaRole(["USER","ADMIN"]))
