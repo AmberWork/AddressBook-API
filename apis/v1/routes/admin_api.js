@@ -2,8 +2,8 @@
 // Based Routes
 // ---------------
 const router = require("express").Router();
-const UserController = require("../controllers/user.controller");
-const AddressController = require("../controllers/addresses.controller");
+const UserController = require("../controllers/user_controller");
+const AddressController = require("../controllers/addresses_controller");
 const Middleware = require("../middlewares/middleware");
 router
     .route("/users")

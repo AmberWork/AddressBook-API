@@ -1,11 +1,11 @@
 // ---------------
 // Based Imports
 // ---------------
-const Address = require('../../../schemas/address.schema');
-const Parish = require('../../../schemas/parish.schema');
-const { JSONResponse } = require('../../../utilities/response.utility');
+const Address = require('../../../schemas/address_schema');
+const Parish = require('../../../schemas/parish_schema');
+const { JSONResponse } = require('../../../utilities/response_utility');
 
-const User = require('../../../schemas/user.schema');
+const User = require('../../../schemas/user_schema');
 
 const mongoose = require('mongoose');
 // ---------------

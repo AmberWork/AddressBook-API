@@ -1,8 +1,8 @@
 const {Schema, model} = require("mongoose");
 const bcrypt = require("bcryptjs");
-const htmlCompiler = require("../utilities/compileHtml.utility");
-const emailer = require("../utilities/nodemailer.utility");
-const { roleMap, getKeyFromValue, statusEnum, statusMap } = require("../constants/constantMaps");
+const htmlCompiler = require("../utilities/compile_html_utility");
+const emailer = require("../utilities/nodemailer_utility");
+const { roleMap, getKeyFromValue, statusEnum, statusMap } = require("../constants/constant_maps");
 
 
 

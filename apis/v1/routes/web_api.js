@@ -6,7 +6,7 @@ const {
     getUserById,
     updateUser,
     deleteUser,
-} = require("../controllers/user.controller");
+} = require("../controllers/user_controller");
 
 const {
     createAddress,
@@ -15,7 +15,7 @@ const {
     updateAddress,
     softDeleteAddress,
     destroyAddress,
-} = require("../controllers/addresses.controller");
+} = require("../controllers/addresses_controller");
 const Middleware = require("../middlewares/middleware");
 
 // ---------------
