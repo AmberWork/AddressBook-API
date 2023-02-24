@@ -2,10 +2,10 @@
 // Based Imports
 // ---------------
 const { default: mongoose, Model, Document } = require('mongoose');
-const { getKeyFromValue, roleMap, statusMap } = require('../../../constants/constantMaps');
-const User = require('../../../schemas/user.schema');
-const { JSONResponse } = require('../../../utilities/response.utility');
-const JWTHelper = require('../../../utilities/token.utility');
+const { getKeyFromValue, roleMap, statusMap } = require('../../../constants/constant_maps');
+const User = require('../../../schemas/user_schema');
+const { JSONResponse } = require('../../../utilities/response_utility');
+const JWTHelper = require('../../../utilities/token_utility');
 // ---------------
 
 
@@ -121,7 +121,7 @@ exports.loginUser = async(req, res, next)=>{
         let passCheck = await user.isCorrectPassword(password);
         if(!passCheck)throw new Error("Invalid password");
         user = this.makeUserReadable(user);
-        let token = JWTHelper.genToken({id: user._id, role: user.role, email: user.email}, "900");
+        let token = JWTHelper.genToken({id: user._id, role: user.role, email: user.email}, "86400"); // 1 day = 86400 seconds
         user = ModifyUserAgainstPlatform(platform, user);
         JSONResponse.success(res, "Successfully found user", {user, token}, 200);
     }catch(error){

@@ -12,7 +12,7 @@ const app = express();
 // ---------------
 // Gets version one of the api
 const apiVersion_1 = require('./apis/v1/root.api');
-const { JSONResponse } = require('./utilities/response.utility');
+const { JSONResponse } = require('./utilities/response_utility');
 // ---------------
 
 
