@@ -1,10 +1,8 @@
 const router = require("express").Router();
-const FileUploader = require("../../../utilities/file_upload.utility");
-const UserController = require("../controllers/user.controller")
+const FileUploader = require("../../../utilities/file_upload_utility");
+const UserController = require("../controllers/user_controller")
 const Middleware = require("../middlewares/middleware")
-const AddressController = require("../controllers/addresses.controller")
-
-    // User
+const AddressController = require("../controllers/addresses_controller")
 router
     .route("/login")
     .post(UserController.loginUser)
