@@ -2,10 +2,10 @@
 // Based Imports
 // ---------------
 const { default: mongoose, Model, Document } = require('mongoose');
-const { getKeyFromValue, roleMap, statusMap } = require('../../../constants/constantMaps');
-const User = require('../../../schemas/user.schema');
-const { JSONResponse } = require('../../../utilities/response.utility');
-const JWTHelper = require('../../../utilities/token.utility');
+const { getKeyFromValue, roleMap, statusMap } = require('../../../constants/constant_maps');
+const User = require('../../../schemas/user_schema');
+const { JSONResponse } = require('../../../utilities/response_utility');
+const JWTHelper = require('../../../utilities/token_utility');
 // ---------------
 
 

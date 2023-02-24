@@ -1,6 +1,6 @@
-const { JSONResponse } = require("../../../utilities/response.utility");
+const { JSONResponse } = require("../../../utilities/response_utility");
 const JWT = require("jsonwebtoken");
-const {getKeyFromValue, roleMap } = require("../../../constants/constantMaps");
+const {getKeyFromValue, roleMap } = require("../../../constants/constant_maps");
 
 class Middleware{
 
