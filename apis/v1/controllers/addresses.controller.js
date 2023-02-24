@@ -8,6 +8,7 @@ const { JSONResponse } = require('../../../utilities/response.utility');
 const User = require('../../../schemas/user.schema');
 
 const mongoose = require('mongoose');
+const { statusMap } = require('../../../constants/constantMaps');
 // ---------------
 
 
@@ -27,6 +28,17 @@ exports.getAllAddresses = async (req, res, next) => {
         const addresses = await Address.find()
         .skip(skip) //call the skip variable
         .limit(limit); // sets the limit on the number of results to return
+
+        // addresses.forEach(address => address.status = address.status.toString())
+
+        let status = req.query.status; //
+        status = (status) ? status.toUpperCase() : undefined;
+        status = (statusMap.has(status)) ? statusMap.get(status) : undefined;
+
+        const searchQuery = {
+            parishName : req.query.parishName,
+            status: status
+        }
         
         JSONResponse.success(res, 'Success.', addresses, 200);
     } catch (error) {
@@ -41,6 +53,7 @@ exports.getAddressById = async (req, res, next) => {
         const address = await Address.findById(req.params.id);
 
         if(!address) throw new Error('Address not found');
+        
 
         JSONResponse.success(res, 'Success.', address, 200);
     } catch (error) {
@@ -82,8 +95,7 @@ exports.createAddress = async (req, res, next) => {
         // check if the user_id is of the ObjectID type
          if(!mongoose.Types.ObjectId.isValid(req.params.user_id)) {
             throw new Error('User id is not valid');
-         }
-         
+         }        
 
         JSONResponse.success(res, 'Success.', address, 201);
     } catch (error) {
@@ -100,6 +112,8 @@ exports.updateAddress = async (req, res) => {
         const address = await Address.findByIdAndUpdate(req.params.id, req.body, { new: true})
 
         if(!address) throw new Error('Address not updated');
+
+        platform = checkForPlatform(platform)
         
         JSONResponse.success(res, 'Success.', address, 200);
     } catch (error) {
@@ -126,9 +140,6 @@ exports.softDeleteAddress = async (req, res) => {
         JSONResponse.error(res, 'Error.', error, 404);
     }
 }
-
-
-
 
 
 // destroy address
@@ -207,6 +218,13 @@ exports.deleteParish = async (req, res) => {
 
 
 
+// Checks if the platform is valid
+function checkForPlatform(platform) {
+    if (!platform) throw new Error("No platform provided");
+    platform = platform.toLowerCase();
+    if(platform != "web" && platform != "admin") throw new Error ("Invalid platform");
+    return platform;
+}
 
 
 

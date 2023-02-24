@@ -3,6 +3,8 @@ const FileUploader = require("../../../utilities/file_upload.utility");
 const UserController = require("../controllers/user.controller")
 const Middleware = require("../middlewares/middleware")
 const AddressController = require("../controllers/addresses.controller")
+
+    // User
 router
     .route("/login")
     .post(UserController.loginUser)
@@ -19,6 +21,7 @@ router
     .delete(UserController.deleteUser)
 
 
+    // Password
 router.route("/requestPasswordReset")
     .all(new Middleware().protectedViaRole(["USER","ADMIN"]))
     .post(UserController.requestPasswordReset);
@@ -42,11 +45,6 @@ router
     .put(AddressController.updateAddress)
     .delete(AddressController.softDeleteAddress);
 
-
-router.route('/users/:user_id')
-    .all(new Middleware().protectedViaRole(["USER","ADMIN"]))
-    .get(UserController.getUserById).put(UserController.updateUser)
-    .delete(AddressController.softDeleteAddress);
 
 router.route('/addresses/:id/destroy')
     .all(new Middleware().protectedViaRole(["USER","ADMIN"]))
