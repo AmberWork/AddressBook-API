@@ -15,7 +15,7 @@ router
     .route("/users/:user_id")
     .all(new Middleware().protectedViaRole(["ADMIN", "USER"]))
     .get(UserController.getUserById)
-    .patch(UserController.updateUser)
+    .patch(FileUploader.uploadFile("Profile").single("profile_image"),UserController.updateUser)
     .delete(UserController.deleteUser)
 
 
