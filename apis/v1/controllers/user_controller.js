@@ -168,6 +168,8 @@ exports.createUser = async (req, res, next) => {
         let {platform} = req.query;
         platform = checkForPlatform(platform);
         let userData = req.body;
+        if(Object.keys(userData).length == 0 && req.file == undefined) throw new Error("No data passed to update user")
+
         userData.profile_image = (req.file) ? req.file.path: undefined;
         // if(!(Object.keys(userData).length == 0)) throw new Error("No data passed to the user")
         // update role if it is provided by the admin
@@ -199,7 +201,8 @@ exports.updateUser = async (req, res) => {
         platform = checkForPlatform(platform);
         let user_id = req.params.user_id;
         let userData = req.body;
-        if(Object.keys(userData).length == 0) throw new Error("No data passed to update user")
+
+        if(Object.keys(userData).length == 0 && req.file == undefined) throw new Error("No data passed to update user")
         userData.profile_image = (req.file) ? req.file.path: undefined;
         userData.password = undefined;
         userData = checkRoleAndStatusAgainstPlatform(userData, platform);
