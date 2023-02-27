@@ -336,7 +336,7 @@ function removeForWeb(user){
         first_name: user.first_name,
         last_name: user.last_name,
         email: user.email,
-        profile: user.profile_image,
+        profile_image: user.profile_image,
         mobile_number: user.mobile_number,
         home_number: user.home_number
 
