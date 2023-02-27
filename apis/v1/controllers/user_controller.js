@@ -22,9 +22,9 @@ exports.getAllUsers = async (req, res) => {
 
         let role = req.query.role;
         let status = req.query.status;
-        status = (status) ? status.toUpperCase() : undefined;
+        status = (status && typeof(status) == "string") ? status.toUpperCase() : undefined;
         status = (statusMap.has(status)) ? statusMap.get(status) : undefined;
-        role = (role) ? role.toUpperCase() : undefined
+        role = (role && typeof(status) == "string") ? role.toUpperCase() : undefined
         role = (roleMap.has(role)) ? roleMap.get(role): undefined;
       // declare the format of the query params
       const searchQuery = {
@@ -74,17 +74,20 @@ exports.getAllUsers = async (req, res) => {
   
       let users = await User.aggregate(
           searchResult.length ?
-             searchResult.map((result) => {
+             [...searchResult.map((result) => {
                   return {$match: result};
-              })
+              }),
+              {$match : {status: {$ne: statusMap.get("INACTIVE")}}},
+              {$sort : sortObj},
+              {$skip : startIndex},
+              {$limit : limit},
+            ]
           :
-          []
-      )
-      .append([
-        {$sort : sortObj},
-        {$skip : startIndex},
-        {$limit : limit},
-    ]).match({status : {$ne: statusMap.get("INACTIVE")}}).project({password: 0}); // removes documents that are inactive
+          [{$match : {status: {$ne: statusMap.get("INACTIVE")}}},
+          {$sort : sortObj},
+          {$skip : startIndex},
+          {$limit : limit},]
+      ).project({password: 0}); // removes documents that are inactive
       users = this.makeUserReadable(users);
       JSONResponse.success(
         res,
@@ -421,7 +424,7 @@ function ModifyUserAgainstPlatform(platform, user){
  */
 function checkRoleAndStatusAgainstPlatform(userData, platform){
     if(platform == "admin"){
-        validRole = userData.role ? roleMap.get(userData.role.toUpperCase()): false;
+        validRole = (userData.role && typeof(userData.role) == "string") ? roleMap.get(userData.role.toUpperCase()): false;
         validStatus = userData.status ? statusMap.get(userData.status.toUpperCase()) : false; 
         userData.role = (validRole) ? validRole : undefined;
         userData.status = (validStatus) ? validStatus : undefined; 
