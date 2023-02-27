@@ -11,7 +11,26 @@ const addressSchema = new Schema({
     deletedAt: {type: Schema.Types.Date, default: null}
 }, {timestamps: true});
 
+addressSchema.pre("aggregate", function(next) {
+    this.lookup({
+        from: "parishes", //collection name
+        localField: "parish", // parish id in the addresses table
+        foreignField: "_id", // id in the parishes collection
+        as: "parish" //the alias, what you want the property be called
+    })
+    
+    .unwind("$parish")
 
+
+    // .project({
+    //     parish: {
+    //         _id: 0,
+    //         __v: 0
+    //     }
+    // })
+    
+    next();
+})
 
 
 module.exports = model("Address", addressSchema);

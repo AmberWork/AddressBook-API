@@ -102,6 +102,7 @@ exports.getAllAddresses = async (req, res, next) => {
 
 
 exports.makeAddressReadable = (addresses) => {
+    
     let readableAddresses;
     
         if(Array.isArray(addresses)) {
@@ -112,7 +113,7 @@ exports.makeAddressReadable = (addresses) => {
                 let newAddress = {
                     ...doc,
                     status: statusKey,
-                    
+                    parish: doc.parish.parishName
                 }
                 return newAddress;
             })
