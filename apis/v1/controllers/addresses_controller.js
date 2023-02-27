@@ -101,27 +101,32 @@ exports.getAllAddresses = async (req, res, next) => {
 };
 
 exports.makeAddressReadable = (addresses) => {
-  let readableAddresses;
+    
+    let readableAddresses;
+    
+        if(Array.isArray(addresses)) {
 
-  if (Array.isArray(addresses)) {
-    readableAddresses = addresses.map((doc) => {
-      let statusKey = checkStatusAndMakeReadable(doc);
-      doc = doc._doc ? doc._doc : doc;
-      let newAddress = {
-        ...doc,
-        status: statusKey,
-      };
-      return newAddress;
-    });
-  } else {
-    let statusKey = checkStatusAndMakeReadable(addresses);
-    readableAddresses = {
-      ...addresses._doc,
-      status: statusKey,
-    };
-  }
-  return readableAddresses;
-};
+            readableAddresses = addresses.map((doc) => {
+                let statusKey = checkStatusAndMakeReadable(doc);
+                doc = doc._doc ? doc._doc: doc
+                let newAddress = {
+                    ...doc,
+                    status: statusKey,
+                    parish: doc.parish.parishName
+                }
+                return newAddress;
+            })
+        } else {
+            let statusKey = checkStatusAndMakeReadable(addresses);
+            readableAddresses = {
+                ...addresses._doc,
+                status: statusKey,
+            }
+        }
+        return readableAddresses;
+
+}
+
 
 // get address by id
 exports.getAddressById = async (req, res, next) => {
