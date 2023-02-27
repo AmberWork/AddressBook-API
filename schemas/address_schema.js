@@ -1,4 +1,5 @@
 const {Schema, model} = require("mongoose");
+const { schema } = require("./parish_schema");
 
 
 const addressSchema = new Schema({
@@ -29,6 +30,16 @@ addressSchema.pre("aggregate", function(next) {
     //     }
     // })
     
+    next();
+})
+
+
+
+addressSchema.pre(/^find/, function(next) {
+    this.populate({
+        path: "parish",
+        select: "parishName"
+    });
     next();
 })
 

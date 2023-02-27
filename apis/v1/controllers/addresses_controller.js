@@ -122,11 +122,16 @@ exports.makeAddressReadable = (addresses) => {
             readableAddresses = {
                 ...addresses._doc,
                 status: statusKey,
+                parish: addresses._doc.parish.parishName
             }
         }
+        console.log(addresses)
         return readableAddresses;
-
 }
+
+
+
+
 
 
 
@@ -157,16 +162,18 @@ exports.getAllAddressByUserId = async (req, res, next) => {
         if(!mongoose.Types.ObjectId.isValid(req.params.user_id)) {
             throw new Error('Address not found');
         }
-
-        // if(!mongoose.Types.ObjectId.isValid(req.params.user_id)) throw new Error('Invalid format of user_id');
-        // const user = await User.findById(req.params.user_id);
-        // if(!user) throw new Error('User not found');
-        // const addresses = await Address.find({user_id: req.params.user_id});
         
-        let address = await Address.find({user_id: req.params.user_id}).select({deletedAt:0, createdAt:0, updatedAt:0});
-        address = this.makeAddressReadable(address);
+        // Find user that matches the user id that isn't INACTIVE
+        let user = await User.findOne({_id: req.params.user_id, $ne : {status: statusMap.get("INACTIVE")}});
+        if(user) {
+            let address = await Address.find({user_id: req.params.user_id}).select({deletedAt:0, createdAt:0, updatedAt:0});
+            address = this.makeAddressReadable(address);
+    
+            JSONResponse.success(res, 'Success.', address, 200);            
+        } else {
+            JSONResponse.success(res, 'Success.', [], 200);          
+        }
 
-        JSONResponse.success(res, 'Success.', address, 200);
     } catch (error) {
         JSONResponse.error(res, 'Error.', error, 404);
     }
