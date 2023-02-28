@@ -18,9 +18,12 @@ addressSchema.pre("aggregate", function(next) {
         localField: "parish", // parish id in the addresses table
         foreignField: "_id", // id in the parishes collection
         as: "parish" //the alias, what you want the property be called
-    })
-    
-    .unwind("$parish")
+    }).unwind("$parish").lookup({
+        from: "users", //collection name
+        localField: "user_id", // parish id in the addresses table
+        foreignField: "_id", // id in the parishes collection
+        as: "user_id" //the alias, what you want the property be called
+    }).unwind("$user_id")
 
 
     // .project({
@@ -34,14 +37,21 @@ addressSchema.pre("aggregate", function(next) {
 })
 
 
-
 addressSchema.pre(/^find/, function(next) {
     this.populate({
         path: "parish",
-        select: "parishName"
+        select: "parishName"      
     });
+
+    this.populate({
+        path: "user_id",
+        select: "email"
+    })
     next();
 })
+
+
+
 
 
 module.exports = model("Address", addressSchema);
