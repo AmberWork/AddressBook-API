@@ -75,13 +75,19 @@ exports.getAllAddresses = async (req, res, next) => {
     let addressCount = await Address.find();
     let addresses = await Address.aggregate(
       searchResult.length
-        ? searchResult.map((result) => {
+        ? [
+          ...searchResult.map((result) => {
             return { $match: result };
-          })
-        : [{ $sort: sortObj }, { $skip: skip }, { $limit: limit }]
+          }),
+          { $match: {status: { $ne: statusMap.get("INACTIVE") }}},
+          { $sort: sortObj }, 
+          { $skip: skip }, 
+          { $limit: limit }
+        ]
+        : [{ $match: {status: { $ne: statusMap.get("INACTIVE") }}}, { $sort: sortObj }, { $skip: skip }, { $limit: limit }]
     )
-      .match({ status: { $ne: statusMap.get("INACTIVE") } })
-      .project({ deletedAt: 0, createdAt: 0, updatedAt: 0 });
+      // .match({ status: { $ne: statusMap.get("INACTIVE") } })
+    .project({ deletedAt: 0, createdAt: 0, updatedAt: 0 });
     addresses = this.makeAddressReadable(addresses);
     console.log(addresses);
     JSONResponse.success(
@@ -112,19 +118,26 @@ exports.makeAddressReadable = (addresses) => {
                 let newAddress = {
                     ...doc,
                     status: statusKey,
-                    parish: doc.parish.parishName
+                    parish: doc.parish.parishName,
+                    user_id: doc.user_id.email,
                 }
                 return newAddress;
             })
-        } else {
+          } else {
             let statusKey = checkStatusAndMakeReadable(addresses);
+            
+            // doc = doc._doc ? doc._doc: doc
+            addresses = addresses._doc ? addresses._doc: addresses
+
             readableAddresses = {
-                ...addresses._doc,
+              // ...addresses._doc,
+              ...addresses,
                 status: statusKey,
-                parish: addresses._doc.parish.parishName
+                parish: addresses.parish.parishName,
+                user_id: addresses.user_id.email,
+                // parish: addresses._doc.parish.parishName
             }
         }
-        console.log(addresses)
         return readableAddresses;
 }
 
@@ -174,7 +187,7 @@ exports.getAllAddressByUserId = async (req, res, next) => {
 exports.createAddress = async (req, res, next) => {
   try {
     let addressData = req.body;
-    let address = await new Address(addressData).save();
+    let address = await (await new Address(addressData).save()).populate("parish");
 
     if (!address) throw new Error("Address not created");
     // check if the user_id is of the ObjectID type
@@ -188,8 +201,13 @@ exports.createAddress = async (req, res, next) => {
       updatedAt: undefined,
       createdAt: undefined,
     };
+
+    address = this.makeAddressReadable(address);
+
+    console.log(address);
     JSONResponse.success(res, "Success.", address, 201);
   } catch (error) {
+    console.log(error.stack);
     JSONResponse.error(res, "Error.", error, 404);
   }
 };
@@ -210,7 +228,7 @@ exports.updateAddress = async (req, res) => {
       .ne("status", statusMap.get("INACTIVE"))
       .select({ deletedAt: 0, createdAt: 0, updatedAt: 0 });
 
-    if (!address) throw new Error("Address not updated");
+    if (!address) throw new Error("Address not found");
 
     address = this.makeAddressReadable(address);
 
@@ -223,7 +241,7 @@ exports.updateAddress = async (req, res) => {
 // soft delete address
 exports.softDeleteAddress = async (req, res) => {
   try {
-    const address = await Address.findByIdAndUpdate(req.params.id, {
+    let address = await Address.findByIdAndUpdate(req.params.id, {
       status: statusMap.get("INACTIVE"),
       deletedAt: new Date().toISOString(),
     })
@@ -231,6 +249,8 @@ exports.softDeleteAddress = async (req, res) => {
       .select({ deletedAt: 0, createdAt: 0, updatedAt: 0 });
 
     if (!address) throw new Error("Address not deleted");
+
+    address = this.makeAddressReadable(address);
 
     JSONResponse.success(res, "Success.", address, 200);
   } catch (error) {
@@ -241,9 +261,11 @@ exports.softDeleteAddress = async (req, res) => {
 // destroy address
 exports.destroyAddress = async (req, res) => {
   try {
-    const address = await Address.findByIdAndDelete(req.params.id);
+    let address = await Address.findByIdAndDelete(req.params.id);
 
     if (!address) throw new Error("Address not destroyed");
+
+    address = this.makeAddressReadable(address);
 
     JSONResponse.success(res, "Success.", address, 200);
   } catch (error) {
