@@ -77,7 +77,6 @@ exports.getAllAddresses = async (req, res, next) => {
     const sortObj = {};
     sortObj[sortField] = sortOrder === "asc" ? 1 : -1;
     let addressCount = await Address.find();
-    console.log(sortObj)
     let addresses = await Address.aggregate(
       searchResult.length
         ? [
@@ -86,11 +85,12 @@ exports.getAllAddresses = async (req, res, next) => {
           }),
           { $match: {status: { $ne: statusMap.get("INACTIVE") }}},
           { $skip: skip }, 
-          { $limit: limit },
+          
           { $sort: sortObj }, 
+          { $limit: limit },
 
         ]
-        : [{ $match: {status: { $ne: statusMap.get("INACTIVE") }}},{ $skip: skip }, { $limit: limit },{$sort: sortObj}]
+        : [{ $match: {status: { $ne: statusMap.get("INACTIVE") }}},{$sort: sortObj},{ $skip: skip },{ $limit: limit },]
     )
     .project({ deletedAt: 0, createdAt: 0, updatedAt: 0 });
     addresses = this.makeAddressReadable(addresses);
