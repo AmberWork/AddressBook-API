@@ -262,7 +262,9 @@ exports.requestPasswordReset = async (req, res, next) => {
         let user = await User.findOne({email: email}).ne("status", statusMap.get("INACTIVE"));
         if(!user) throw new Error("No user exists with that email");
         let time = await user.requestPasswordReset(redirectLink);
-        JSONResponse.success(res, `Successfully sent password reset request, ${time.response}`, {},200);
+        JSONResponse.success(res, `Successfully sent password reset request, ${time.response}`, {
+            email: user.email
+        },200);
     }catch(error){
         JSONResponse.error(res, "Unable to reset password", error,404)
     }
