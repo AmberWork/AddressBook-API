@@ -8,6 +8,7 @@ const { JSONResponse } = require("../../../utilities/response_utility");
 const User = require("../../../schemas/user_schema");
 
 const mongoose = require("mongoose");
+const {ObjectId} = mongoose.Types;
 const {
   statusMap,
   getKeyFromValue,
@@ -125,10 +126,9 @@ exports.makeAddressReadable = (addresses) => {
                 return newAddress;
             })
           } else {
-            let statusKey = checkStatusAndMakeReadable(addresses);
             
-            // doc = doc._doc ? doc._doc: doc
             addresses = addresses._doc ? addresses._doc: addresses
+            let statusKey = checkStatusAndMakeReadable(addresses);
             readableAddresses = {
               // ...addresses._doc,
               ...addresses,
@@ -166,11 +166,13 @@ exports.getAllAddressByUserId = async (req, res, next) => {
         if(!mongoose.Types.ObjectId.isValid(req.params.user_id)) {
             throw new Error('Address not found');
         }
-        
+        console.log(req.params.user_id)
         // Find user that matches the user id that isn't INACTIVE
         let user = await User.findOne({_id: req.params.user_id, $ne : {status: statusMap.get("INACTIVE")}});
         if(user) {
-            let address = await Address.find({user_id: req.params.user_id}).select({deletedAt:0, createdAt:0, updatedAt:0});
+            let address = await Address.find({user_id : req.params.user_id}).ne("status", statusMap.get("INACTIVE"))
+            .select({ deletedAt: 0, createdAt: 0, updatedAt: 0 });
+            console.log(address)
             address = this.makeAddressReadable(address);
     
             JSONResponse.success(res, 'Success.', address, 200);            
@@ -187,22 +189,22 @@ exports.getAllAddressByUserId = async (req, res, next) => {
 exports.createAddress = async (req, res, next) => {
   try {
     let addressData = req.body;
-    let address = await(await new Address(addressData).save()).populate("parish")
+    let address = await(await new Address(addressData).save()).populate("parish user_id")
     // address = address.populate("user_id parish");
     if (!address) throw new Error("Address not created");
     // check if the user_id is of the ObjectID type
     if (!mongoose.Types.ObjectId.isValid(addressData.user_id)) {
       throw new Error("User id is not valid");
     }
-    console.log(address);
+
+
+    address = this.makeAddressReadable(address);
     address = {
       ...address,
       deletedAt: undefined,
       updatedAt: undefined,
       createdAt: undefined,
     };
-
-    address = this.makeAddressReadable(address);
 
     JSONResponse.success(res, "Success.", address, 201);
   } catch (error) {
