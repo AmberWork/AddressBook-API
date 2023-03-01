@@ -162,15 +162,17 @@ exports.getAddressById = async (req, res, next) => {
 // get all address by user id
 exports.getAllAddressByUserId = async (req, res, next) => {
     try {
+        let user_id = req.params.user_id;
 
-        if(!mongoose.Types.ObjectId.isValid(req.params.user_id)) {
+        if(!mongoose.Types.ObjectId.isValid(user_id)) {
             throw new Error('Address not found');
         }
-        console.log(req.params.user_id)
+        console.log(user_id)
         // Find user that matches the user id that isn't INACTIVE
-        let user = await User.findOne({_id: req.params.user_id, $ne : {status: statusMap.get("INACTIVE")}});
+        let user = await User.findOne({_id: user_id, $ne : {status: statusMap.get("INACTIVE")}});
         if(user) {
-            let address = await Address.find({user_id : req.params.user_id}).ne("status", statusMap.get("INACTIVE"))
+            let address = await Address.find({user_id : user_id})
+            .ne("status", statusMap.get("INACTIVE"))
             .select({ deletedAt: 0, createdAt: 0, updatedAt: 0 });
             console.log(address)
             address = this.makeAddressReadable(address);
