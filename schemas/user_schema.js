@@ -82,7 +82,6 @@ userSchema.methods.requestPasswordReset = async function(redirectLink){
     }catch(error){
         let message;
         if(error.message.includes("Invalid login")){
-            console.log("Invalid")
             message = "Invalid login for Email Server"
         }else if(error.message.includes("Missing")){
             message = "Missing Credentials"
