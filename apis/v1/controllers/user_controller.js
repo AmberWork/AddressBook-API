@@ -279,10 +279,10 @@ exports.resetPassword = async(req, res, next)=>{
     platform = checkForPlatform(platform);
     let {password} = req.body;
     if(!password) throw new Error("No password to update");
-    let {user_id} = req.query;
+    let {email} = req.query;
     // Ensures that only the password will be updated on this route.
-     let user = await User.findOne({_id: user_id}).ne("status", statusMap.get("INACTIVE"));
-     if (!user) throw new Error("User not found with this id");
+     let user = await User.findOne({email: email}).ne("status", statusMap.get("INACTIVE"));
+     if (!user) throw new Error("User not found with this email");
      user.password = password;
      await user.save();
      user = this.makeUserReadable(user);
