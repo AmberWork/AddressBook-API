@@ -8,6 +8,7 @@ const { JSONResponse } = require("../../../utilities/response_utility");
 const User = require("../../../schemas/user_schema");
 
 const mongoose = require("mongoose");
+const {ObjectId} = mongoose.Types;
 const {
   statusMap,
   getKeyFromValue,
@@ -32,6 +33,8 @@ exports.getAllAddresses = async (req, res, next) => {
     const searchQuery = {
       parishName: req.query.parishName,
       status: status,
+      city: req.query.city,
+      address_1: req.query.address_1,
     };
 
     let searchResult = [];
@@ -59,11 +62,12 @@ exports.getAllAddresses = async (req, res, next) => {
 
     // format the query for partial search in the database
     Object.keys(searchQuery).forEach((search) => {
+      console.log(searchQuery)
       if (search == "status") {
         searchResult.push({ status: { $eq: searchQuery[search] } });
       } else
         searchResult.push({
-          [search]: searchQuery[search],
+          [search]: { $regex: searchQuery[search], $options: "i" },
         });
     });
 
@@ -73,6 +77,7 @@ exports.getAllAddresses = async (req, res, next) => {
     const sortObj = {};
     sortObj[sortField] = sortOrder === "asc" ? 1 : -1;
     let addressCount = await Address.find();
+    console.log(sortObj)
     let addresses = await Address.aggregate(
       searchResult.length
         ? [
@@ -80,16 +85,15 @@ exports.getAllAddresses = async (req, res, next) => {
             return { $match: result };
           }),
           { $match: {status: { $ne: statusMap.get("INACTIVE") }}},
-          { $sort: sortObj }, 
           { $skip: skip }, 
-          { $limit: limit }
+          { $limit: limit },
+          { $sort: sortObj }, 
+
         ]
-        : [{ $match: {status: { $ne: statusMap.get("INACTIVE") }}}, { $sort: sortObj }, { $skip: skip }, { $limit: limit }]
+        : [{ $match: {status: { $ne: statusMap.get("INACTIVE") }}},{ $skip: skip }, { $limit: limit },{$sort: sortObj}]
     )
-      // .match({ status: { $ne: statusMap.get("INACTIVE") } })
     .project({ deletedAt: 0, createdAt: 0, updatedAt: 0 });
     addresses = this.makeAddressReadable(addresses);
-    console.log(addresses);
     JSONResponse.success(
       res,
       "success",
@@ -109,9 +113,7 @@ exports.getAllAddresses = async (req, res, next) => {
 exports.makeAddressReadable = (addresses) => {
     
     let readableAddresses;
-    
         if(Array.isArray(addresses)) {
-
             readableAddresses = addresses.map((doc) => {
                 let statusKey = checkStatusAndMakeReadable(doc);
                 doc = doc._doc ? doc._doc: doc
@@ -124,11 +126,9 @@ exports.makeAddressReadable = (addresses) => {
                 return newAddress;
             })
           } else {
-            let statusKey = checkStatusAndMakeReadable(addresses);
             
-            // doc = doc._doc ? doc._doc: doc
             addresses = addresses._doc ? addresses._doc: addresses
-
+            let statusKey = checkStatusAndMakeReadable(addresses);
             readableAddresses = {
               // ...addresses._doc,
               ...addresses,
@@ -162,15 +162,19 @@ exports.getAddressById = async (req, res, next) => {
 // get all address by user id
 exports.getAllAddressByUserId = async (req, res, next) => {
     try {
+        let user_id = req.params.user_id;
 
-        if(!mongoose.Types.ObjectId.isValid(req.params.user_id)) {
+        if(!mongoose.Types.ObjectId.isValid(user_id)) {
             throw new Error('Address not found');
         }
-        
+        console.log(user_id)
         // Find user that matches the user id that isn't INACTIVE
-        let user = await User.findOne({_id: req.params.user_id, $ne : {status: statusMap.get("INACTIVE")}});
+        let user = await User.findOne({_id: user_id, $ne : {status: statusMap.get("INACTIVE")}});
         if(user) {
-            let address = await Address.find({user_id: req.params.user_id}).select({deletedAt:0, createdAt:0, updatedAt:0});
+            let address = await Address.find({user_id : user_id})
+            .ne("status", statusMap.get("INACTIVE"))
+            .select({ deletedAt: 0, createdAt: 0, updatedAt: 0 });
+            console.log(address)
             address = this.makeAddressReadable(address);
     
             JSONResponse.success(res, 'Success.', address, 200);            
@@ -187,24 +191,23 @@ exports.getAllAddressByUserId = async (req, res, next) => {
 exports.createAddress = async (req, res, next) => {
   try {
     let addressData = req.body;
-    let address = await (await new Address(addressData).save()).populate("parish");
-
+    let address = await(await new Address(addressData).save()).populate("parish user_id")
+    // address = address.populate("user_id parish");
     if (!address) throw new Error("Address not created");
     // check if the user_id is of the ObjectID type
     if (!mongoose.Types.ObjectId.isValid(addressData.user_id)) {
       throw new Error("User id is not valid");
     }
 
+
+    address = this.makeAddressReadable(address);
     address = {
-      ...address._doc,
+      ...address,
       deletedAt: undefined,
       updatedAt: undefined,
       createdAt: undefined,
     };
 
-    address = this.makeAddressReadable(address);
-
-    console.log(address);
     JSONResponse.success(res, "Success.", address, 201);
   } catch (error) {
     console.log(error.stack);

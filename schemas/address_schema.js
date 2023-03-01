@@ -13,17 +13,18 @@ const addressSchema = new Schema({
 }, {timestamps: true});
 
 addressSchema.pre("aggregate", function(next) {
+    
     this.lookup({
         from: "parishes", //collection name
-        localField: "parish", // parish id in the addresses table
-        foreignField: "_id", // id in the parishes collection
+        localField: "ObjectId(parish)", // parish id in the addresses table
+        foreignField: "ObjectId(_id)", // id in the parishes collection
         as: "parish" //the alias, what you want the property be called
-    }).unwind("$parish").lookup({
+    }).lookup({
         from: "users", //collection name
-        localField: "user_id", // parish id in the addresses table
-        foreignField: "_id", // id in the parishes collection
+        localField: "ObjectId(user_id)", // parish id in the addresses table
+        foreignField: "ObjectId(_id)", // id in the parishes collection
         as: "user_id" //the alias, what you want the property be called
-    }).unwind("$user_id")
+    }).unwind("$user_id").unwind("$parish")
 
 
     // .project({
@@ -38,6 +39,8 @@ addressSchema.pre("aggregate", function(next) {
 
 
 addressSchema.pre(/^find/, function(next) {
+
+
     this.populate({
         path: "parish",
         select: "parishName"      
