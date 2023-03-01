@@ -14,6 +14,8 @@ userDump.forEach((user)=>{
 
 addressDump.forEach((address)=>{
   address._id = mongoose.Types.ObjectId.createFromHexString(address._id);
+  address.user_id = mongoose.Types.ObjectId.createFromHexString(address.user_id);
+
   address.createdAt = new Date(address.createdAt).toISOString();
   address.updatedAt = new Date(address.updatedAt).toISOString();
   address.deletedAt = address.deletedAt? new Date(address.deletedAt).toISOString(): null;
