@@ -13,18 +13,19 @@ const addressSchema = new Schema({
 }, {timestamps: true});
 
 addressSchema.pre("aggregate", function(next) {
+    
     this.lookup({
         from: "parishes", //collection name
-        localField: "parish", // parish id in the addresses table
-        foreignField: "_id", // id in the parishes collection
+        localField: "ObjectId(parish)", // parish id in the addresses table
+        foreignField: "ObjectId(_id)", // id in the parishes collection
         as: "parish" //the alias, what you want the property be called
-    }).unwind("$parish").lookup({
+    }).lookup({
         from: "users", //collection name
-        localField: "user_id", // parish id in the addresses table
-        foreignField: "_id", // id in the parishes collection
-        as: "user_id" //the alias, what you want the property be called
-    }).unwind("$user_id")
-
+        localField: "ObjectId(user_id)", // parish id in the addresses table
+        foreignField: "ObjectId(_id)", // id in the parishes collection
+        as: "user_id", //the alias, what you want the property be called
+        
+    }).unwind("$user_id").unwind("$parish");
 
     // .project({
     //     parish: {
@@ -33,11 +34,19 @@ addressSchema.pre("aggregate", function(next) {
     //     }
     // })
     
+    // edit the pipeline to add the limit to the end of the pipeline
+    // may be refactored to only let one limit remain in the pipeline
+    let limit = this.pipeline().filter((stage)=> {
+        return Object.keys(stage) == "$limit"})[0]
+    this.pipeline().push(limit);
+    
     next();
 })
 
 
 addressSchema.pre(/^find/, function(next) {
+
+
     this.populate({
         path: "parish",
         select: "parishName"      

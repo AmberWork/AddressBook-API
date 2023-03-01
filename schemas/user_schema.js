@@ -72,16 +72,26 @@ userSchema.methods.isCorrectPassword = async function(password){
  * @returns 
  */
 userSchema.methods.requestPasswordReset = async function(redirectLink){
-    console.log(this);
     const data = {
         user: {first_name: this.first_name, last_name: this.last_name},
         redirectLink
     }
     try{
         let html = htmlCompiler.compileHtml("password_reset",data);
-        await emailer.sendMail(this.email, "Password Reset",`Hello ${this.first_name} ${this.last_name}`,html);
+        return await emailer.sendMail(this.email, "Password Reset",`Hello ${this.first_name} ${this.last_name}`,html);
     }catch(error){
-        return Promise.reject(new Error(error));
+        let message;
+        if(error.message.includes("Invalid login")){
+            console.log("Invalid")
+            message = "Invalid login for Email Server"
+        }else if(error.message.includes("Missing")){
+            message = "Missing Credentials"
+
+        }else{
+            message = error.message
+        }
+
+        return Promise.reject(`Server Error: ${message}`)
     }
 }
 
