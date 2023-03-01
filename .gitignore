@@ -3,6 +3,7 @@
 *.env
 uploads/Profile/*
 !uploads/Profile/README.MD
+!uploads/Profile/default_img.png
 
 # Logs
 logs
