@@ -38,14 +38,9 @@ class Emailer {
 			html: body_html,
 			attachments:selectedAttachment,
 		}
-		this.#transporter.sendMail(mailOptions, function (error, info) {
-			if (error) {
-				console.error(error)
-				throw error
-			} else {
-				console.log('Email sent: ' + info.response)
-			}
-		})
+
+		return this.#transporter.sendMail(mailOptions)
+
 	}
 }
 

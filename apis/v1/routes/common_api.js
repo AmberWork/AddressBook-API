@@ -26,7 +26,6 @@ router.route("/requestPasswordReset")
     .post(UserController.requestPasswordReset);
 
 router.route("/resetPassword")
-    .all(new Middleware().protectedViaRole(["USER","ADMIN"]))
     .post(UserController.resetPassword);
     
 
