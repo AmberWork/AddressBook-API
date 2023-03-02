@@ -121,6 +121,7 @@ exports.loginUser = async(req, res, next)=>{
         if(Object.keys(req.body).length == 0) throw new Error("No data passed to login");
         let user = await User.findOne({email: email}).ne("status", statusMap.get("INACTIVE")); // only finds users who's status is not INACTIVE.
         if(!user) throw new Error("No user matches this email");
+        if(user.status === statusMap.get("PENDING")) throw new Error("User is not approved yet");
         let passCheck = await user.isCorrectPassword(password);
         if(!passCheck)throw new Error("Invalid password");
         user = this.makeUserReadable(user);
@@ -441,3 +442,4 @@ function checkRoleAndStatusAgainstPlatform(userData, platform){
     }
     return userData;
 }
+

@@ -16,7 +16,7 @@
   },
   {
     "_id": "63feb54f83a09eb93b5d52eb",
-    "status": 0,
+    "status": 2,
     "first_name": "Boyd",
     "last_name": "Reese",
     "profile_image": "uploads/Profile/default_img.png",
@@ -286,7 +286,7 @@
   },
   {
     "_id": "63feb54fd8df8cdf882c343b",
-    "status": 0,
+    "status": 2,
     "first_name": "Alana",
     "last_name": "Oconnor",
     "profile_image": "uploads/Profile/default_img.png",
@@ -376,7 +376,7 @@
   },
   {
     "_id": "63feb54f347bb953de3d864a",
-    "status": 0,
+    "status": 2,
     "first_name": "Esperanza",
     "last_name": "Harrison",
     "profile_image": "uploads/Profile/default_img.png",
@@ -436,7 +436,7 @@
   },
   {
     "_id": "63feb54f4221967858b3d510",
-    "status": 0,
+    "status": 3,
     "first_name": "Mcclure",
     "last_name": "Hunter",
     "profile_image": "uploads/Profile/default_img.png",
@@ -481,7 +481,7 @@
   },
   {
     "_id": "63feb54f705d55341778dc0e",
-    "status": 0,
+    "status": 2,
     "first_name": "Burton",
     "last_name": "Carney",
     "profile_image": "uploads/Profile/default_img.png",
@@ -541,7 +541,7 @@
   },
   {
     "_id": "63feb54f360fcabc74eed5b4",
-    "status": 0,
+    "status": 2,
     "first_name": "Stout",
     "last_name": "Cobb",
     "profile_image": "uploads/Profile/default_img.png",
@@ -631,7 +631,7 @@
   },
   {
     "_id": "63feb54f8dcb3d33c7ae9502",
-    "status": 0,
+    "status": 3,
     "first_name": "Grace",
     "last_name": "Velazquez",
     "profile_image": "uploads/Profile/default_img.png",
@@ -706,7 +706,7 @@
   },
   {
     "_id": "63feb54f4350e3a61fd35721",
-    "status": 0,
+    "status": 2,
     "first_name": "Opal",
     "last_name": "Campos",
     "profile_image": "uploads/Profile/default_img.png",
@@ -976,7 +976,7 @@
   },
   {
     "_id": "63feb54f8a655220367822ff",
-    "status": 0,
+    "status": 1,
     "first_name": "Ruby",
     "last_name": "Chang",
     "profile_image": "uploads/Profile/default_img.png",
@@ -1021,7 +1021,7 @@
   },
   {
     "_id": "63feb54f2e3e48ed016ac1e9",
-    "status": 0,
+    "status": 1,
     "first_name": "Randall",
     "last_name": "Tate",
     "profile_image": "uploads/Profile/default_img.png",
@@ -1051,7 +1051,7 @@
   },
   {
     "_id": "63feb54f86c1c9e376cea2a4",
-    "status": 0,
+    "status": 2,
     "first_name": "Penelope",
     "last_name": "Bolton",
     "profile_image": "uploads/Profile/default_img.png",
