@@ -21,7 +21,7 @@ exports.getAllAddresses = async (req, res, next) => {
     // pagination
     let { page, limit } = req.query;
 
-    page = page ? page : 1; // defaults  page to 1
+    page = page ? parseInt(page) : 1; // defaults  page to 1
     limit = limit ? limit : 10; // defaults limit to 10;
     limit = parseInt(limit); // ensures that limit is a number;
     let skip = (page - 1) * limit; // skips the results by a specified ammount
@@ -31,7 +31,7 @@ exports.getAllAddresses = async (req, res, next) => {
     status = statusMap.has(status) ? statusMap.get(status) : undefined;
 
     const searchQuery = {
-      parishName: req.query.parishName,
+      parish: req.query.parish,
       status: status,
       city: req.query.city,
       address_1: req.query.address_1,
@@ -62,7 +62,6 @@ exports.getAllAddresses = async (req, res, next) => {
 
     // format the query for partial search in the database
     Object.keys(searchQuery).forEach((search) => {
-      console.log(searchQuery)
       if (search == "status") {
         searchResult.push({ status: { $eq: searchQuery[search] } });
       } else
@@ -93,6 +92,8 @@ exports.getAllAddresses = async (req, res, next) => {
         : [{ $match: {status: { $ne: statusMap.get("INACTIVE") }}},{$sort: sortObj},{ $skip: skip },{ $limit: limit },]
     )
     .project({ deletedAt: 0, createdAt: 0, updatedAt: 0 });
+    
+  
     addresses = this.makeAddressReadable(addresses);
     JSONResponse.success(
       res,
