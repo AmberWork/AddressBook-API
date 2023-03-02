@@ -208,8 +208,13 @@ exports.updateUser = async (req, res) => {
         if(Object.keys(userData).length == 0 && req.file == undefined) throw new Error("No data passed to update user")
         userData.profile_image = (req.file) ? req.file.path: undefined;
         userData.password = undefined;
+
         userData = checkRoleAndStatusAgainstPlatform(userData, platform);
         if(!mongoose.isValidObjectId(user_id)) throw new Error("Invalid format of user_id");
+        if(userData.email){
+            let userFound = await User.find({email: userData.email});
+            if(userFound.length > 0 && userFound[0]._id != user_id ) throw new Error("This email already exists")
+        }
         let user = await User.findByIdAndUpdate(user_id,userData, {new:true}).ne("status", statusMap.get("INACTIVE"));
         if(!user) throw new Error("No user found with this ID")
         user = this.makeUserReadable(user);
