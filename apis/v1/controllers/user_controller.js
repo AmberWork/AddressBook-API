@@ -126,6 +126,11 @@ exports.loginUser = async(req, res, next)=>{
         user = this.makeUserReadable(user);
         let token = JWTHelper.genToken({id: user._id, role: user.role, email: user.email}, "86400"); // 1 day = 86400 seconds
         user = ModifyUserAgainstPlatform(platform, user);
+        user = {
+            first_name: user.first_name,
+            last_name: user.last_name,
+            profile_image: user.profile_image
+        }
         JSONResponse.success(res, "Successfully found user", {user, token}, 200);
     }catch(error){
         JSONResponse.error(res, "Unable to login", error, 404);
@@ -153,7 +158,7 @@ exports.getUserById = async (req, res, next) => {
         user = this.makeUserReadable(user);
         user = ModifyUserAgainstPlatform(platform, user);
 
-        JSONResponse.success(res, 'Success.', user, 200);
+        JSONResponse.success(res, 'Successfully retrieved user', user, 200);
     } catch (error) {
         JSONResponse.error(res, "Failed to get user by id.", error, 404);
     }
@@ -185,7 +190,7 @@ exports.createUser = async (req, res, next) => {
         user = this.makeUserReadable(user);
         user = ModifyUserAgainstPlatform(platform, user);
 
-        JSONResponse.success(res, 'Success.', user, 201);   
+        JSONResponse.success(res, 'Successfully created user', {}, 201);   
     } catch (error) {
         JSONResponse.error(res, "Failed to create user.", error, 404);
     }
@@ -219,7 +224,7 @@ exports.updateUser = async (req, res) => {
         if(!user) throw new Error("No user found with this ID")
         user = this.makeUserReadable(user);
         user = ModifyUserAgainstPlatform(platform, user);
-        JSONResponse.success(res, 'Success.', user, 200);
+        JSONResponse.success(res, 'Successfully updated user', {}, 200);
     } catch (error) {
         JSONResponse.error(res, "Failed to update user.", error, 404);
     }
@@ -247,7 +252,7 @@ exports.deleteUser = async (req, res) => {
         await user.save();
         user = this.makeUserReadable(user);
         user = ModifyUserAgainstPlatform(platform, user);
-        JSONResponse.success(res, 'Success.', user, 200);
+        JSONResponse.success(res, 'Success deleted user', {}, 200);
     } catch (error) {
         JSONResponse.error(res, "Failed to delete user.", error, 404);
     }
@@ -294,7 +299,7 @@ exports.resetPassword = async(req, res, next)=>{
      await user.save();
      user = this.makeUserReadable(user);
      user = ModifyUserAgainstPlatform(platform, user);
-     JSONResponse.success(res, "Retrieved user info", user, 200);
+     JSONResponse.success(res, "Successfully retrieved user info", {}, 200);
   } catch (error) {
      JSONResponse.error(res, "Unable to find user", error, 404);
   }
