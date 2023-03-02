@@ -120,8 +120,8 @@ exports.makeAddressReadable = (addresses) => {
                 let newAddress = {
                     ...doc,
                     status: statusKey,
-                    parish: doc.parish?.parishName,
-                    user_id: doc.user_id?.email,
+                    parish: doc.parish?.parishName || null,
+                    user_id: doc.user_id?.email || null,
                 }
                 return newAddress;
             })
@@ -133,8 +133,8 @@ exports.makeAddressReadable = (addresses) => {
               // ...addresses._doc,
               ...addresses,
                 status: statusKey,
-                parish: addresses.parish.parishName,
-                user_id: addresses.user_id.email,
+                parish: addresses.parish?.parishName || null,
+                user_id: addresses.user_id?.email || null,
                 // parish: addresses._doc.parish.parishName
             }
         }
