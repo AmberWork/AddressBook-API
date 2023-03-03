@@ -76,7 +76,6 @@ exports.getAllAddresses = async (req, res, next) => {
     const sortOrder = req.query.sortOrder || "des";
     const sortObj = {};
     sortObj[sortField] = sortOrder === "asc" ? 1 : -1;
-    let addressCount = await Address.find();
     let aggregateData = await Address.aggregate(
       searchResult.length
         ? [
@@ -277,62 +276,6 @@ exports.destroyAddress = async (req, res) => {
   }
 };
 
-// get all Parish
-exports.getAllParish = async (req, res, next) => {
-  try {
-    const parishes = await Parish.find();
-
-    JSONResponse.success(res, "Success.", parishes, 200);
-  } catch (error) {
-    JSONResponse.error(res, "Error.", error, 404);
-  }
-};
-
-// get Parish by id
-exports.getParishById = async (req, res, next) => {
-  try {
-    const parish = await Parish.findById(req.params.id);
-    JSONResponse.success(res, "Success.", parish, 200);
-  } catch (error) {
-    JSONResponse.error(res, "Error.", error, 404);
-  }
-};
-
-// create Parish
-exports.createParish = async (req, res, next) => {
-  try {
-    const parish = await Parish.create(req.body);
-
-    if (!parish) throw new Error("Parish not created");
-    JSONResponse.success(res, "Success.", parish, 201);
-  } catch (error) {
-    JSONResponse.error(res, "Error.", error, 404);
-  }
-};
-
-// update Parish
-exports.updateParish = async (req, res) => {
-  try {
-    const parish = await Parish.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
-    if (!parish) throw new Error("Parish not updated");
-    JSONResponse.success(res, "Success.", parish, 200);
-  } catch (error) {
-    JSONResponse.error(res, "Error.", error, 404);
-  }
-};
-
-// delete Parish
-exports.deleteParish = async (req, res) => {
-  try {
-    const parish = await Parish.findByIdAndDelete(req.params.id);
-    if (!parish) throw new Error("Parish not deleted");
-    JSONResponse.success(res, "Success.", parish, 200);
-  } catch (error) {
-    JSONResponse.error(res, "Error.", error, 404);
-  }
-};
 
 // Checks if the platform is valid
 function checkForPlatform(platform) {
