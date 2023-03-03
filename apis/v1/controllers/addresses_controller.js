@@ -58,11 +58,8 @@ exports.getAllAddresses = async (req, res, next) => {
       }
     });
 
-    // addresses.forEach(address => address.status = address.status.toString())
-
     // format the query for partial search in the database
     Object.keys(searchQuery).forEach((search) => {
-      console.log(searchQuery)
       if (search == "status") {
         searchResult.push({ status: { $eq: searchQuery[search] } });
       } else
@@ -120,22 +117,21 @@ exports.makeAddressReadable = (addresses) => {
                 let newAddress = {
                     ...doc,
                     status: statusKey,
-                    parish: doc.parish.parishName,
-                    user_id: doc.user_id.email,
+
+                    parish : doc.parish ? doc.parish.parishName : undefined,
+                    user_id: doc.user_id ? doc.user_id.email : undefined,
                 }
                 return newAddress;
             })
           } else {
-            
             addresses = addresses._doc ? addresses._doc: addresses
             let statusKey = checkStatusAndMakeReadable(addresses);
             readableAddresses = {
-              // ...addresses._doc,
               ...addresses,
                 status: statusKey,
-                parish: addresses.parish.parishName,
-                user_id: addresses.user_id.email,
-                // parish: addresses._doc.parish.parishName
+
+                parish : addresses.parish ? addresses.parish.parishName : undefined,
+                user_id: addresses.user_id ? addresses.user_id.email : undefined,
             }
         }
         return readableAddresses;
@@ -167,14 +163,12 @@ exports.getAllAddressByUserId = async (req, res, next) => {
         if(!mongoose.Types.ObjectId.isValid(user_id)) {
             throw new Error('Address not found');
         }
-        console.log(user_id)
         // Find user that matches the user id that isn't INACTIVE
         let user = await User.findOne({_id: user_id, $ne : {status: statusMap.get("INACTIVE")}});
         if(user) {
             let address = await Address.find({user_id : user_id})
             .ne("status", statusMap.get("INACTIVE"))
             .select({ deletedAt: 0, createdAt: 0, updatedAt: 0 });
-            console.log(address)
             address = this.makeAddressReadable(address);
     
             JSONResponse.success(res, 'Success.', address, 200);            
@@ -190,7 +184,45 @@ exports.getAllAddressByUserId = async (req, res, next) => {
 // create address
 exports.createAddress = async (req, res, next) => {
   try {
+
+    let platform = req.query.platform;
+    platform = checkForPlatform(platform);
+
     let addressData = req.body;
+
+
+    // Check to see if newly created Parish id or user id matches the one in the database
+    let parish = await Parish.findById(addressData.parish);
+    let user = await User.findById(addressData.user_id);
+
+    if (!parish) {
+      throw new Error("No Parish matches this id");
+    }
+
+    if (!user) {
+      throw new Error("No User matches this id");
+    }
+
+
+
+    getKeyFromValue(statusMap, addressData.status)
+
+    if (platform === "admin") {
+      if (typeof(addressData.status) === "string") {
+        addressData.status = statusMap.get(addressData.status.toUpperCase());
+        if (addressData.status === undefined) throw new Error("Invalid status");
+      } else {
+        throw new Error("Invalide status");
+      }
+
+    } else {
+      // addressData.status = statusMap.get(addressData.status);
+      addressData.status = 0;
+      throw new Error("User is not admin");
+    }
+
+
+   
     let address = await(await new Address(addressData).save()).populate("parish user_id")
     // address = address.populate("user_id parish");
     if (!address) throw new Error("Address not created");
@@ -198,8 +230,7 @@ exports.createAddress = async (req, res, next) => {
     if (!mongoose.Types.ObjectId.isValid(addressData.user_id)) {
       throw new Error("User id is not valid");
     }
-
-
+    
     address = this.makeAddressReadable(address);
     address = {
       ...address,
@@ -210,10 +241,11 @@ exports.createAddress = async (req, res, next) => {
 
     JSONResponse.success(res, "Success.", address, 201);
   } catch (error) {
-    console.log(error.stack);
     JSONResponse.error(res, "Error.", error, 404);
   }
 };
+
+
 
 // update address
 exports.updateAddress = async (req, res) => {
@@ -222,9 +254,48 @@ exports.updateAddress = async (req, res) => {
     platform = checkForPlatform(platform);
 
     let addressData = req.body;
-    addressData.status = statusMap.has(addressData.status)
-      ? statusMap.get(addressData.status)
-      : undefined;
+    
+    // Check to see if newly created Parish id or user id matches the one in the database
+    let parish = await Parish.findById(addressData.parish);
+    let user = await User.findById(addressData.user_id);
+
+    if (!parish) {
+      throw new Error("No Parish matches this id");
+    }
+
+    if (!user) {
+      throw new Error("No User matches this id");
+    }
+
+    getKeyFromValue(statusMap, addressData.status)
+
+    if (platform === "admin") {
+      if (typeof(addressData.status) === "string") {
+        addressData.status = statusMap.get(addressData.status.toUpperCase());
+        if (addressData.status === undefined) throw new Error("Invalid status");
+      } else {
+        throw new Error("Invalide status");
+      }
+
+    } else {
+      addressData.status = 0;
+      throw new Error("User is not admin");
+    }
+
+
+
+    addressData.user_id = user._id;
+    if (!addressData.user_id) throw new Error("User not in database")
+
+    addressData.parish = req.body.parish;
+    if (!addressData.parish) throw new Error("Parish not in database")
+
+    // check if the user_id and parish is inside the database, and they aren't, throw an error
+    addressData.user_id = user._id;
+    if (!addressData.user_id) throw new Error("User not in database")
+    addressData.parish = req.body.parish;
+    if (!addressData.parish) throw new Error("Parish not in database")
+    
     let address = await Address.findByIdAndUpdate(req.params.id, addressData, {
       new: true,
     })
