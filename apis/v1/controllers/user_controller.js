@@ -195,6 +195,7 @@ exports.createUser = async (req, res, next) => {
         // if(!(Object.keys(userData).length == 0)) throw new Error("No data passed to the user")
         // update role if it is provided by the admin
         userData = checkRoleAndStatusAgainstPlatform(userData, platform);
+        if(platform == "admin" && userData.role != 0 && !userData.role ) throw new Error("User role not valid ")
         let user = new User(userData); // creates model from userdata
         let duplicated = await user.checkDuplicate();
         if(duplicated) throw new Error("A user with that email already exists");
@@ -228,6 +229,8 @@ exports.updateUser = async (req, res) => {
         userData.password = undefined;
 
         userData = checkRoleAndStatusAgainstPlatform(userData, platform);
+        if(platform == "admin" && userData.role != 0 && !userData.role ) throw new Error("User role not valid ")
+
         if(!mongoose.isValidObjectId(user_id)) throw new Error("Invalid format of user_id");
         if(userData.email){
             let userFound = await User.find({email: userData.email});
@@ -450,12 +453,16 @@ function ModifyUserAgainstPlatform(platform, user){
 function checkRoleAndStatusAgainstPlatform(userData, platform){
     if(platform == "admin"){
         validRole = (userData.role && typeof(userData.role) == "string") ? roleMap.get(userData.role.toUpperCase()): false;
-        validStatus = userData.status ? statusMap.get(userData.status.toUpperCase()) : false; 
-        userData.role = (validRole) ? validRole : undefined;
+        validStatus = userData.status ? statusMap.get(userData.status.toUpperCase()) : false;
+        if(validRole == 0){
+            userData.role = validRole
+        }else if(validRole != false){
+            userData.role = validRole
+        }
         userData.status = (validStatus) ? validStatus : undefined; 
     }else{
-        userData.role = undefined;
-        userData.status = undefined;
+        userData.role = 0;
+        userData.status = 0;
     }
     return userData;
 }
