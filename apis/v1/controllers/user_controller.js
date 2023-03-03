@@ -24,7 +24,7 @@ exports.getAllUsers = async (req, res) => {
         let status = req.query.status;
         status = (status && typeof(status) == "string") ? status.toUpperCase() : undefined;
         status = (statusMap.has(status)) ? statusMap.get(status) : undefined;
-        role = (role && typeof(status) == "string") ? role.toUpperCase() : undefined
+        role = (role && typeof(role) == "string") ? role.toUpperCase() : undefined;
         role = (roleMap.has(role)) ? roleMap.get(role): undefined;
       // declare the format of the query params
       const searchQuery = {
