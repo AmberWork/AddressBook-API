@@ -15,14 +15,22 @@ const addressSchema = new Schema({
 addressSchema.pre("aggregate", function(next) {
     
     let limitIndex = 0;
+    let skipIndex;
     let limit = this.pipeline().filter((stage, index)=>{
         if(Object.keys(stage)[0] == "$limit"){
             limitIndex = index;
             return true
         }
     })
+    let skip = this.pipeline().filter((stage, index)=>{
+        if(Object.keys(stage)[0] == "$skip"){
+            skipIndex = index;
+            return true
+        }
+    })
 
     this.pipeline().splice(limitIndex,1);
+    this.pipeline().splice(skipIndex,1);
 
     this.facet({
         count:[{$count: "count"}],
@@ -41,9 +49,11 @@ addressSchema.pre("aggregate", function(next) {
                 as: "user_id" //the alias, what you want the property be called
             }},
             {$unwind:{path:"$user_id"}},
+            skip[0],
             limit[0]
         ]
     });
+
 
 
     
