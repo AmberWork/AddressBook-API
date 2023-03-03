@@ -41,7 +41,6 @@ userSchema.pre("save", async function(next){
 
 // Softdelete of user
 userSchema.pre("deleteOne",(next)=>{
-    console.log("deleted");
     this.deletedAt = new Date().toISOString();
     this.status = statusEnum.get("INACTIVE");
     

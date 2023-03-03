@@ -58,11 +58,8 @@ exports.getAllAddresses = async (req, res, next) => {
       }
     });
 
-    // addresses.forEach(address => address.status = address.status.toString())
-
     // format the query for partial search in the database
     Object.keys(searchQuery).forEach((search) => {
-      console.log(searchQuery)
       if (search == "status") {
         searchResult.push({ status: { $eq: searchQuery[search] } });
       } else
@@ -123,27 +120,18 @@ exports.makeAddressReadable = (addresses) => {
 
                     parish : doc.parish ? doc.parish.parishName : undefined,
                     user_id: doc.user_id ? doc.user_id.email : undefined,
-
-                    // parish: doc.parish?.parishName || undefined,
-                    // user_id: doc.user_id?.email || undefined,
                 }
                 return newAddress;
             })
           } else {
-            
             addresses = addresses._doc ? addresses._doc: addresses
             let statusKey = checkStatusAndMakeReadable(addresses);
             readableAddresses = {
-              // ...addresses._doc,
               ...addresses,
                 status: statusKey,
-                // parish: addresses.parish?.parishName || undefined,
-                // user_id: addresses.user_id?.email || undefined,
 
                 parish : addresses.parish ? addresses.parish.parishName : undefined,
                 user_id: addresses.user_id ? addresses.user_id.email : undefined,
-                
-                // parish: addresses._doc.parish.parishName
             }
         }
         return readableAddresses;
@@ -175,7 +163,6 @@ exports.getAllAddressByUserId = async (req, res, next) => {
         if(!mongoose.Types.ObjectId.isValid(user_id)) {
             throw new Error('Address not found');
         }
-        // console.log(user_id)
         // Find user that matches the user id that isn't INACTIVE
         let user = await User.findOne({_id: user_id, $ne : {status: statusMap.get("INACTIVE")}});
         if(user) {
@@ -183,7 +170,6 @@ exports.getAllAddressByUserId = async (req, res, next) => {
             .ne("status", statusMap.get("INACTIVE"))
             .select({ deletedAt: 0, createdAt: 0, updatedAt: 0 });
             address = this.makeAddressReadable(address);
-            console.log(address)
     
             JSONResponse.success(res, 'Success.', address, 200);            
         } else {
@@ -255,7 +241,6 @@ exports.createAddress = async (req, res, next) => {
 
     JSONResponse.success(res, "Success.", address, 201);
   } catch (error) {
-    console.log(error.stack);
     JSONResponse.error(res, "Error.", error, 404);
   }
 };
@@ -282,18 +267,6 @@ exports.updateAddress = async (req, res) => {
       throw new Error("No User matches this id");
     }
 
-    /**
-     * TODO
-     * If user is not admin they should not be able to update the status of the address (for creating and dupdating)
-     * you need to convert string to number with the function.      
-     * getKeyFromValue(statusMap, addressData.status)
-     * have check to see if the status being passed is:
-     * a string,
-     * the correct string
-     * 
-     * */
-
-
     getKeyFromValue(statusMap, addressData.status)
 
     if (platform === "admin") {
@@ -305,7 +278,6 @@ exports.updateAddress = async (req, res) => {
       }
 
     } else {
-      // addressData.status = statusMap.get(addressData.status);
       addressData.status = 0;
       throw new Error("User is not admin");
     }
@@ -324,10 +296,6 @@ exports.updateAddress = async (req, res) => {
     addressData.parish = req.body.parish;
     if (!addressData.parish) throw new Error("Parish not in database")
     
-
-    // addressData.status = statusMap.has(addressData.status)
-    //   ? statusMap.get(addressData.status)
-    //   : undefined;
     let address = await Address.findByIdAndUpdate(req.params.id, addressData, {
       new: true,
     })
@@ -340,7 +308,6 @@ exports.updateAddress = async (req, res) => {
 
     JSONResponse.success(res, "Success.", address, 200);
   } catch (error) {
-    console.log(error);
     JSONResponse.error(res, "Error.", error, 404);
   }
 };
