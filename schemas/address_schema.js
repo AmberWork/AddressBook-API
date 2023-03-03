@@ -14,7 +14,6 @@ const addressSchema = new Schema({
 
 addressSchema.pre("aggregate", function(next) {
     
-    console.log(this.pipeline())
     let limitIndex = 0;
     let limit = this.pipeline().filter((stage, index)=>{
         if(Object.keys(stage)[0] == "$limit"){
@@ -22,8 +21,7 @@ addressSchema.pre("aggregate", function(next) {
             return true
         }
     })
-    console.log(limit);
-    console.log(limitIndex)
+
     this.pipeline().splice(limitIndex,1);
 
     this.facet({
