@@ -3,10 +3,16 @@ const FileUploader = require("../../../utilities/file_upload_utility");
 const UserController = require("../controllers/user_controller")
 const Middleware = require("../middlewares/middleware")
 const AddressController = require("../controllers/addresses_controller");
-
+const ParishController = require("../controllers/parish_controller")
 router
     .route("/login")
     .post(UserController.loginUser)
+
+
+router
+    .all(new Middleware().protectedViaRole(["USER", "ADMIN"]))
+    .route("/getRoleAndStatus")
+    .get(UserController.getRolesAndStatus);
 
 router
     .route("/users")
@@ -49,6 +55,12 @@ router.route('/addresses/:id/destroy')
     .delete(AddressController.destroyAddress);
 
 router.route("/parishes")
-    .get(AddressController.getAllParish)
+    .all(new Middleware().protectedViaRole(["USER", "ADMIN"]))
+    .get(ParishController.getAllParish)
+    .get(ParishController.getParishByName);
 
+
+router.route("parishes/:id")
+    .get(ParishController.getParishById)
+ 
 module.exports = router;

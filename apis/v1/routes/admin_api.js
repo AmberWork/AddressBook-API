@@ -4,6 +4,7 @@
 const router = require("express").Router();
 const UserController = require("../controllers/user_controller");
 const AddressController = require("../controllers/addresses_controller");
+const ParishController = require("../controllers/parish_controller");
 const Middleware = require("../middlewares/middleware");
 router
     .route("/users")
@@ -26,14 +27,14 @@ router
     // Parishes routers
 router
     .route("/parishes")
-    .post(AddressController.createParish)
+    .post(ParishController.createParish)
     
 
 router
     .route("/parishes/:id")
-    .get(AddressController.getParishById)
-    .put(AddressController.updateParish)
-    .delete(AddressController.deleteParish)
+    .put(ParishController.updateParish)
+    .delete(ParishController.deleteParish)
+
 // ---------------
     
 module.exports = router;

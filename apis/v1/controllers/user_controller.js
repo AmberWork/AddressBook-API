@@ -419,6 +419,17 @@ function filterInactive(documents){
     }
     return null
 }
+/**
+ * @description Gets the Roles and Status list then returns it to the user calling this route.
+ * @param {Request} req 
+ * @param {Response} res 
+ * @param {import('express').NextFunction} next 
+ */
+exports.getRolesAndStatus = (req, res, next) =>{
+    let status_list = Array.from(statusMap.keys());
+    let role_list = Array.from(roleMap.keys());
+    JSONResponse.success(res, "Retrieved roles and status Succesfully",{status_list, role_list}, 200)
+}
 
 /**
  * Checks for the platform if it is valid
