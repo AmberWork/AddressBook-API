@@ -75,13 +75,13 @@ exports.getAllUsers = async (req, res) => {
       let userAggregation = await User.aggregate(
           searchResult.length ?
              [
+                ...searchResult.map((result) => {
+                    return {$match: result};
+                }),
+                {$match : {status: {$ne: statusMap.get("INACTIVE")}}},
                 {$facet:{
                     count:[{$count: "count"}],
-                    users: [
-                        ...searchResult.map((result) => {
-                            return {$match: result};
-                        }),
-                        {$match : {status: {$ne: statusMap.get("INACTIVE")}}},
+                    users: [ 
                         {$sort : sortObj},
                         {$skip : startIndex},
                         {$limit : limit},
@@ -90,10 +90,11 @@ exports.getAllUsers = async (req, res) => {
               
             ]
           :
-          [{$facet:{
+          [ 
+            {$match : {status: {$ne: statusMap.get("INACTIVE")}}},
+            {$facet:{
             count:[{$count: "count"}],
             users: [
-                {$match : {status: {$ne: statusMap.get("INACTIVE")}}},
                 {$sort : sortObj},
                 {$skip : startIndex},
                 {$limit : limit}
