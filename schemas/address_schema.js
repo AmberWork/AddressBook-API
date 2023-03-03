@@ -14,18 +14,41 @@ const addressSchema = new Schema({
 
 addressSchema.pre("aggregate", function(next) {
     
-    this.lookup({
-        from: "parishes", //collection name
-        localField: "parish", // parish id in the addresses table
-        foreignField: "_id", // id in the parishes collection
-        as: "parish" //the alias, what you want the property be called
-    }).unwind("$parish");
-    this.lookup({
-        from: "users", //collection name
-        localField: "user_id", // parish id in the addresses table
-        foreignField: "_id", // id in the parishes collection
-        as: "user_id" //the alias, what you want the property be called
-    }).unwind("$user_id");
+    console.log(this.pipeline())
+    let limitIndex = 0;
+    let limit = this.pipeline().filter((stage, index)=>{
+        if(Object.keys(stage)[0] == "$limit"){
+            limitIndex = index;
+            return true
+        }
+    })
+    console.log(limit);
+    console.log(limitIndex)
+    this.pipeline().splice(limitIndex,1);
+
+    this.facet({
+        count:[{$count: "count"}],
+        data:[
+            {$lookup:{
+                from: "parishes", //collection name
+                localField: "parish", // parish id in the addresses table
+                foreignField: "_id", // id in the parishes collection
+                as: "parish" //the alias, what you want the property be called
+            }},
+            {$unwind:{path:"$parish"}},
+            {$lookup:{
+                from: "users", //collection name
+                localField: "user_id", // parish id in the addresses table
+                foreignField: "_id", // id in the parishes collection
+                as: "user_id" //the alias, what you want the property be called
+            }},
+            {$unwind:{path:"$user_id"}},
+            limit[0]
+        ]
+    });
+
+
+    
 
     
     next();
