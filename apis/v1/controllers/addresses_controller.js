@@ -120,8 +120,8 @@ exports.makeAddressReadable = (addresses) => {
                 let newAddress = {
                     ...doc,
                     status: statusKey,
-                    parish: doc.parish?.parishName || null,
-                    user_id: doc.user_id?.email || null,
+                    parish: doc.parish?.parishName || undefined,
+                    user_id: doc.user_id?.email || undefined,
                 }
                 return newAddress;
             })
@@ -133,8 +133,8 @@ exports.makeAddressReadable = (addresses) => {
               // ...addresses._doc,
               ...addresses,
                 status: statusKey,
-                parish: addresses.parish?.parishName || null,
-                user_id: addresses.user_id?.email || null,
+                parish: addresses.parish?.parishName || undefined,
+                user_id: addresses.user_id?.email || undefined,
                 // parish: addresses._doc.parish.parishName
             }
         }
@@ -191,6 +191,13 @@ exports.getAllAddressByUserId = async (req, res, next) => {
 exports.createAddress = async (req, res, next) => {
   try {
     let addressData = req.body;
+
+    addressData.user_id = req.body.user._id;
+    if (!addressData.user_id) throw new Error("User not in database")
+
+    addressData.parish = req.body.parish;
+    if (!addressData.parish) throw new Error("Parish not in database")
+
     let address = await(await new Address(addressData).save()).populate("parish user_id")
     // address = address.populate("user_id parish");
     if (!address) throw new Error("Address not created");
@@ -198,6 +205,7 @@ exports.createAddress = async (req, res, next) => {
     if (!mongoose.Types.ObjectId.isValid(addressData.user_id)) {
       throw new Error("User id is not valid");
     }
+    
 
 
     address = this.makeAddressReadable(address);
@@ -222,6 +230,13 @@ exports.updateAddress = async (req, res) => {
     platform = checkForPlatform(platform);
 
     let addressData = req.body;
+
+    // check if the user_id and parish is inside the database, and they aren't, throw an error
+    addressData.user_id = req.body.user._id;
+    if (!addressData.user_id) throw new Error("User not in database")
+    addressData.parish = req.body.parish;
+    if (!addressData.parish) throw new Error("Parish not in database")
+
     addressData.status = statusMap.has(addressData.status)
       ? statusMap.get(addressData.status)
       : undefined;
