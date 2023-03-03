@@ -28,8 +28,8 @@ exports.getAllUsers = async (req, res) => {
         role = (roleMap.has(role)) ? roleMap.get(role): undefined;
       // declare the format of the query params
       const searchQuery = {
-        first_name: req.query.firstName,
-        last_name: req.query.lastName,
+        first_name: req.query.first_name,
+        last_name: req.query.last_name,
         email: req.query.email,
         role: role,
         status: status,
@@ -104,9 +104,9 @@ exports.getAllUsers = async (req, res) => {
       let users = this.makeUserReadable(userAggregation[0]["users"]);
       JSONResponse.success(
         res,
-        "Success",
+        "Successfully retrieved users",
         {
-            count: userAggregation[0]["count"][0]["count"],
+            count: userAggregation[0]["count"].length > 0 ? userAggregation[0]["count"][0]["count"]:0,
           users: removeForAdmin(users),
           page: page,
           limit: limit,
