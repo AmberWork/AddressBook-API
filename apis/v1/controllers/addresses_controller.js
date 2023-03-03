@@ -120,8 +120,12 @@ exports.makeAddressReadable = (addresses) => {
                 let newAddress = {
                     ...doc,
                     status: statusKey,
-                    parish: doc.parish?.parishName || undefined,
-                    user_id: doc.user_id?.email || undefined,
+
+                    parish : doc.parish ? doc.parish.parishName : undefined,
+                    user_id: doc.user_id ? doc.user_id.email : undefined,
+
+                    // parish: doc.parish?.parishName || undefined,
+                    // user_id: doc.user_id?.email || undefined,
                 }
                 return newAddress;
             })
@@ -133,8 +137,12 @@ exports.makeAddressReadable = (addresses) => {
               // ...addresses._doc,
               ...addresses,
                 status: statusKey,
-                parish: addresses.parish?.parishName || undefined,
-                user_id: addresses.user_id?.email || undefined,
+                // parish: addresses.parish?.parishName || undefined,
+                // user_id: addresses.user_id?.email || undefined,
+
+                parish : addresses.parish ? addresses.parish.parishName : undefined,
+                user_id: addresses.user_id ? addresses.user_id.email : undefined,
+                
                 // parish: addresses._doc.parish.parishName
             }
         }
@@ -190,14 +198,45 @@ exports.getAllAddressByUserId = async (req, res, next) => {
 // create address
 exports.createAddress = async (req, res, next) => {
   try {
+
+    let platform = req.query.platform;
+    platform = checkForPlatform(platform);
+
     let addressData = req.body;
 
-    addressData.user_id = req.body.user._id;
-    if (!addressData.user_id) throw new Error("User not in database")
 
-    addressData.parish = req.body.parish;
-    if (!addressData.parish) throw new Error("Parish not in database")
+    // Check to see if newly created Parish id or user id matches the one in the database
+    let parish = await Parish.findById(addressData.parish);
+    let user = await User.findById(addressData.user_id);
 
+    if (!parish) {
+      throw new Error("No Parish matches this id");
+    }
+
+    if (!user) {
+      throw new Error("No User matches this id");
+    }
+
+
+
+    getKeyFromValue(statusMap, addressData.status)
+
+    if (platform === "admin") {
+      if (typeof(addressData.status) === "string") {
+        addressData.status = statusMap.get(addressData.status.toUpperCase());
+        if (addressData.status === undefined) throw new Error("Invalid status");
+      } else {
+        throw new Error("Invalide status");
+      }
+
+    } else {
+      // addressData.status = statusMap.get(addressData.status);
+      addressData.status = 0;
+      throw new Error("User is not admin");
+    }
+
+
+   
     let address = await(await new Address(addressData).save()).populate("parish user_id")
     // address = address.populate("user_id parish");
     if (!address) throw new Error("Address not created");
@@ -206,8 +245,6 @@ exports.createAddress = async (req, res, next) => {
       throw new Error("User id is not valid");
     }
     
-
-
     address = this.makeAddressReadable(address);
     address = {
       ...address,
@@ -223,6 +260,8 @@ exports.createAddress = async (req, res, next) => {
   }
 };
 
+
+
 // update address
 exports.updateAddress = async (req, res) => {
   try {
@@ -230,16 +269,65 @@ exports.updateAddress = async (req, res) => {
     platform = checkForPlatform(platform);
 
     let addressData = req.body;
+    
+    // Check to see if newly created Parish id or user id matches the one in the database
+    let parish = await Parish.findById(addressData.parish);
+    let user = await User.findById(addressData.user_id);
 
-    // check if the user_id and parish is inside the database, and they aren't, throw an error
-    addressData.user_id = req.body.user._id;
+    if (!parish) {
+      throw new Error("No Parish matches this id");
+    }
+
+    if (!user) {
+      throw new Error("No User matches this id");
+    }
+
+    /**
+     * TODO
+     * If user is not admin they should not be able to update the status of the address (for creating and dupdating)
+     * you need to convert string to number with the function.      
+     * getKeyFromValue(statusMap, addressData.status)
+     * have check to see if the status being passed is:
+     * a string,
+     * the correct string
+     * 
+     * */
+
+
+    getKeyFromValue(statusMap, addressData.status)
+
+    if (platform === "admin") {
+      if (typeof(addressData.status) === "string") {
+        addressData.status = statusMap.get(addressData.status.toUpperCase());
+        if (addressData.status === undefined) throw new Error("Invalid status");
+      } else {
+        throw new Error("Invalide status");
+      }
+
+    } else {
+      // addressData.status = statusMap.get(addressData.status);
+      addressData.status = 0;
+      throw new Error("User is not admin");
+    }
+
+
+
+    addressData.user_id = user._id;
     if (!addressData.user_id) throw new Error("User not in database")
+
     addressData.parish = req.body.parish;
     if (!addressData.parish) throw new Error("Parish not in database")
 
-    addressData.status = statusMap.has(addressData.status)
-      ? statusMap.get(addressData.status)
-      : undefined;
+    // check if the user_id and parish is inside the database, and they aren't, throw an error
+    addressData.user_id = user._id;
+    if (!addressData.user_id) throw new Error("User not in database")
+    addressData.parish = req.body.parish;
+    if (!addressData.parish) throw new Error("Parish not in database")
+    
+
+    // addressData.status = statusMap.has(addressData.status)
+    //   ? statusMap.get(addressData.status)
+    //   : undefined;
     let address = await Address.findByIdAndUpdate(req.params.id, addressData, {
       new: true,
     })
@@ -252,6 +340,7 @@ exports.updateAddress = async (req, res) => {
 
     JSONResponse.success(res, "Success.", address, 200);
   } catch (error) {
+    console.log(error);
     JSONResponse.error(res, "Error.", error, 404);
   }
 };
