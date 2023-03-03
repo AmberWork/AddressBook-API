@@ -24,7 +24,7 @@ exports.getAllUsers = async (req, res) => {
         let status = req.query.status;
         status = (status && typeof(status) == "string") ? status.toUpperCase() : undefined;
         status = (statusMap.has(status)) ? statusMap.get(status) : undefined;
-        role = (role && typeof(status) == "string") ? role.toUpperCase() : undefined
+        role = (role && typeof(role) == "string") ? role.toUpperCase() : undefined;
         role = (roleMap.has(role)) ? roleMap.get(role): undefined;
       // declare the format of the query params
       const searchQuery = {
@@ -72,27 +72,40 @@ exports.getAllUsers = async (req, res) => {
       const sortObj = {};
       sortObj[sortField] = sortOrder === "asc" ? 1 : -1;
   
-      let users = await User.aggregate(
+      let userAggregation = await User.aggregate(
           searchResult.length ?
-             [...searchResult.map((result) => {
-                  return {$match: result};
-              }),
-              {$match : {status: {$ne: statusMap.get("INACTIVE")}}},
-              {$sort : sortObj},
-              {$skip : startIndex},
-              {$limit : limit},
+             [
+                {$facet:{
+                    count:[{$count: "count"}],
+                    users: [
+                        ...searchResult.map((result) => {
+                            return {$match: result};
+                        }),
+                        {$match : {status: {$ne: statusMap.get("INACTIVE")}}},
+                        {$sort : sortObj},
+                        {$skip : startIndex},
+                        {$limit : limit},
+                        ]
+                }}
+              
             ]
           :
-          [{$match : {status: {$ne: statusMap.get("INACTIVE")}}},
-          {$sort : sortObj},
-          {$skip : startIndex},
-          {$limit : limit},]
+          [{$facet:{
+            count:[{$count: "count"}],
+            users: [
+                {$match : {status: {$ne: statusMap.get("INACTIVE")}}},
+                {$sort : sortObj},
+                {$skip : startIndex},
+                {$limit : limit}
+            ]
+          }}]
       ).project({password: 0}); // removes documents that are inactive
-      users = this.makeUserReadable(users);
+      let users = this.makeUserReadable(userAggregation[0]["users"]);
       JSONResponse.success(
         res,
         "Success",
         {
+            count: userAggregation[0]["count"][0]["count"],
           users: removeForAdmin(users),
           page: page,
           limit: limit,
@@ -127,6 +140,11 @@ exports.loginUser = async(req, res, next)=>{
         user = this.makeUserReadable(user);
         let token = JWTHelper.genToken({id: user._id, role: user.role, email: user.email}, "86400"); // 1 day = 86400 seconds
         user = ModifyUserAgainstPlatform(platform, user);
+        user = {
+            first_name: user.first_name,
+            last_name: user.last_name,
+            profile_image: user.profile_image
+        }
         JSONResponse.success(res, "Successfully found user", {user, token}, 200);
     }catch(error){
         JSONResponse.error(res, "Unable to login", error, 404);
@@ -154,7 +172,7 @@ exports.getUserById = async (req, res, next) => {
         user = this.makeUserReadable(user);
         user = ModifyUserAgainstPlatform(platform, user);
 
-        JSONResponse.success(res, 'Success.', user, 200);
+        JSONResponse.success(res, 'Successfully retrieved user', user, 200);
     } catch (error) {
         JSONResponse.error(res, "Failed to get user by id.", error, 404);
     }
@@ -178,6 +196,7 @@ exports.createUser = async (req, res, next) => {
         // if(!(Object.keys(userData).length == 0)) throw new Error("No data passed to the user")
         // update role if it is provided by the admin
         userData = checkRoleAndStatusAgainstPlatform(userData, platform);
+        if(platform == "admin" && userData.role != 0 && !userData.role ) throw new Error("User role not valid ")
         let user = new User(userData); // creates model from userdata
         let duplicated = await user.checkDuplicate();
         if(duplicated) throw new Error("A user with that email already exists");
@@ -186,7 +205,7 @@ exports.createUser = async (req, res, next) => {
         user = this.makeUserReadable(user);
         user = ModifyUserAgainstPlatform(platform, user);
 
-        JSONResponse.success(res, 'Success.', user, 201);   
+        JSONResponse.success(res, 'Successfully created user', {}, 201);   
     } catch (error) {
         JSONResponse.error(res, "Failed to create user.", error, 404);
     }
@@ -211,6 +230,8 @@ exports.updateUser = async (req, res) => {
         userData.password = undefined;
 
         userData = checkRoleAndStatusAgainstPlatform(userData, platform);
+        if(platform == "admin" && userData.role != 0 && !userData.role ) throw new Error("User role not valid ")
+
         if(!mongoose.isValidObjectId(user_id)) throw new Error("Invalid format of user_id");
         if(userData.email){
             let userFound = await User.find({email: userData.email});
@@ -220,7 +241,7 @@ exports.updateUser = async (req, res) => {
         if(!user) throw new Error("No user found with this ID")
         user = this.makeUserReadable(user);
         user = ModifyUserAgainstPlatform(platform, user);
-        JSONResponse.success(res, 'Success.', user, 200);
+        JSONResponse.success(res, 'Successfully updated user', {}, 200);
     } catch (error) {
         JSONResponse.error(res, "Failed to update user.", error, 404);
     }
@@ -248,7 +269,7 @@ exports.deleteUser = async (req, res) => {
         await user.save();
         user = this.makeUserReadable(user);
         user = ModifyUserAgainstPlatform(platform, user);
-        JSONResponse.success(res, 'Success.', user, 200);
+        JSONResponse.success(res, 'Success deleted user', {}, 200);
     } catch (error) {
         JSONResponse.error(res, "Failed to delete user.", error, 404);
     }
@@ -295,7 +316,7 @@ exports.resetPassword = async(req, res, next)=>{
      await user.save();
      user = this.makeUserReadable(user);
      user = ModifyUserAgainstPlatform(platform, user);
-     JSONResponse.success(res, "Retrieved user info", user, 200);
+     JSONResponse.success(res, "Successfully retrieved user info", {}, 200);
   } catch (error) {
      JSONResponse.error(res, "Unable to find user", error, 404);
   }
@@ -433,12 +454,16 @@ function ModifyUserAgainstPlatform(platform, user){
 function checkRoleAndStatusAgainstPlatform(userData, platform){
     if(platform == "admin"){
         validRole = (userData.role && typeof(userData.role) == "string") ? roleMap.get(userData.role.toUpperCase()): false;
-        validStatus = userData.status ? statusMap.get(userData.status.toUpperCase()) : false; 
-        userData.role = (validRole) ? validRole : undefined;
+        validStatus = userData.status ? statusMap.get(userData.status.toUpperCase()) : false;
+        if(validRole == 0){
+            userData.role = validRole
+        }else if(validRole != false){
+            userData.role = validRole
+        }
         userData.status = (validStatus) ? validStatus : undefined; 
     }else{
-        userData.role = undefined;
-        userData.status = undefined;
+        userData.role = 0;
+        userData.status = 0;
     }
     return userData;
 }
