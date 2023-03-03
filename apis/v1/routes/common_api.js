@@ -8,6 +8,12 @@ router
     .route("/login")
     .post(UserController.loginUser)
 
+
+router
+    .all(new Middleware().protectedViaRole(["USER", "ADMIN"]))
+    .route("/getRoleAndStatus")
+    .get(UserController.getRolesAndStatus);
+
 router
     .route("/users")
     .post(FileUploader.uploadFile("Profile").single("profile_image"),UserController.createUser)
