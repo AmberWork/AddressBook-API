@@ -72,27 +72,40 @@ exports.getAllUsers = async (req, res) => {
       const sortObj = {};
       sortObj[sortField] = sortOrder === "asc" ? 1 : -1;
   
-      let users = await User.aggregate(
+      let userAggregation = await User.aggregate(
           searchResult.length ?
-             [...searchResult.map((result) => {
-                  return {$match: result};
-              }),
-              {$match : {status: {$ne: statusMap.get("INACTIVE")}}},
-              {$sort : sortObj},
-              {$skip : startIndex},
-              {$limit : limit},
+             [
+                {$facet:{
+                    count:[{$count: "count"}],
+                    users: [
+                        ...searchResult.map((result) => {
+                            return {$match: result};
+                        }),
+                        {$match : {status: {$ne: statusMap.get("INACTIVE")}}},
+                        {$sort : sortObj},
+                        {$skip : startIndex},
+                        {$limit : limit},
+                        ]
+                }}
+              
             ]
           :
-          [{$match : {status: {$ne: statusMap.get("INACTIVE")}}},
-          {$sort : sortObj},
-          {$skip : startIndex},
-          {$limit : limit},]
+          [{$facet:{
+            count:[{$count: "count"}],
+            users: [
+                {$match : {status: {$ne: statusMap.get("INACTIVE")}}},
+                {$sort : sortObj},
+                {$skip : startIndex},
+                {$limit : limit}
+            ]
+          }}]
       ).project({password: 0}); // removes documents that are inactive
-      users = this.makeUserReadable(users);
+      let users = this.makeUserReadable(userAggregation[0]["users"]);
       JSONResponse.success(
         res,
         "Success",
         {
+            count: userAggregation[0]["count"][0]["count"],
           users: removeForAdmin(users),
           page: page,
           limit: limit,
