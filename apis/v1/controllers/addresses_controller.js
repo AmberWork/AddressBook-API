@@ -203,8 +203,6 @@ exports.createAddress = async (req, res, next) => {
       throw new Error("No User matches this id");
     }
 
-
-
     getKeyFromValue(statusMap, addressData.status)
 
     if (platform === "admin") {
@@ -214,12 +212,14 @@ exports.createAddress = async (req, res, next) => {
       } else {
         throw new Error("Invalide status");
       }
-
-    } else {
-      // addressData.status = statusMap.get(addressData.status);
-      addressData.status = 0;
-      throw new Error("User is not admin");
+    } if (platform === "common" && platform === "web") {
+      if (addressData !== undefined) {
+        addressData.status = 0;
+        throw new Error("User is not admin");
+      }
     }
+
+
 
 
    
@@ -277,12 +277,12 @@ exports.updateAddress = async (req, res) => {
         throw new Error("Invalide status");
       }
 
-    } else {
-      addressData.status = 0;
-      throw new Error("User is not admin");
+    } if (platform === "common" && platform === "web") {
+      if (addressData !== undefined) {
+        addressData.status = 0;
+        throw new Error("User is not admin");
+      }
     }
-
-
 
     addressData.user_id = user._id;
     if (!addressData.user_id) throw new Error("User not in database")
