@@ -32,12 +32,16 @@ exports.getAllAddresses = async (req, res, next) => {
     status = statusMap.has(status) ? statusMap.get(status) : undefined;
 
     const searchQuery = {
-      parishName: req.query.parishName,
+      parish: req.query.parishName,
       status: status,
       city: req.query.city,
       address_1: req.query.address_1,
     };
-
+    if(searchQuery.parish){
+      let parish = await Parish.findOne({parishName: searchQuery.parish});
+    if(!parish) throw new Error("No parish with this name exists");
+    searchQuery.parish = parish._id
+    }
     let searchResult = [];
     // remove the params that are undefined or have empty field request
     Object.keys(searchQuery).forEach((search) => {
@@ -61,9 +65,10 @@ exports.getAllAddresses = async (req, res, next) => {
 
     // format the query for partial search in the database
     Object.keys(searchQuery).forEach((search) => {
-      if (search == "status") {
-        searchResult.push({ status: { $eq: searchQuery[search] } });
+      if (search == "status"  || search =="parish") {
+        searchResult.push({ [search]: { $eq: searchQuery[search] } });
       } else
+       
         searchResult.push({
           [search]: { $regex: searchQuery[search], $options: "i" },
         });
@@ -74,8 +79,8 @@ exports.getAllAddresses = async (req, res, next) => {
     const sortOrder = req.query.sortOrder || "des";
     const sortObj = {};
     sortObj[sortField] = sortOrder === "asc" ? 1 : -1;
-    let addressCount = await Address.find();
-    let addresses = await Address.aggregate(
+
+    let aggregateData = await Address.aggregate(
       searchResult.length
         ? [
           ...searchResult.map((result) => {
@@ -91,7 +96,8 @@ exports.getAllAddresses = async (req, res, next) => {
         : [{ $match: {status: { $ne: statusMap.get("INACTIVE") }}},{$sort: sortObj},{ $skip: skip },{ $limit: limit },]
     )
     .project({ deletedAt: 0, createdAt: 0, updatedAt: 0 });
-    addresses = this.makeAddressReadable(addresses);
+
+    let addresses = this.makeAddressReadable(aggregateData[0]["data"]);
     JSONResponse.success(
       res,
       "success",
@@ -99,7 +105,7 @@ exports.getAllAddresses = async (req, res, next) => {
         addresses,
         page: page,
         limit: limit,
-        addressCount: addressCount.length,
+        count: aggregateData[0]["count"].length > 0 ? aggregateData[0]["count"][0]["count"] : 0
       },
       200
     );
@@ -342,62 +348,6 @@ exports.destroyAddress = async (req, res) => {
   }
 };
 
-// get all Parish
-exports.getAllParish = async (req, res, next) => {
-  try {
-    const parishes = await Parish.find();
-
-    JSONResponse.success(res, "Success.", parishes, 200);
-  } catch (error) {
-    JSONResponse.error(res, "Error.", error, 404);
-  }
-};
-
-// get Parish by id
-exports.getParishById = async (req, res, next) => {
-  try {
-    const parish = await Parish.findById(req.params.id);
-    JSONResponse.success(res, "Success.", parish, 200);
-  } catch (error) {
-    JSONResponse.error(res, "Error.", error, 404);
-  }
-};
-
-// create Parish
-exports.createParish = async (req, res, next) => {
-  try {
-    const parish = await Parish.create(req.body);
-
-    if (!parish) throw new Error("Parish not created");
-    JSONResponse.success(res, "Success.", parish, 201);
-  } catch (error) {
-    JSONResponse.error(res, "Error.", error, 404);
-  }
-};
-
-// update Parish
-exports.updateParish = async (req, res) => {
-  try {
-    const parish = await Parish.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
-    if (!parish) throw new Error("Parish not updated");
-    JSONResponse.success(res, "Success.", parish, 200);
-  } catch (error) {
-    JSONResponse.error(res, "Error.", error, 404);
-  }
-};
-
-// delete Parish
-exports.deleteParish = async (req, res) => {
-  try {
-    const parish = await Parish.findByIdAndDelete(req.params.id);
-    if (!parish) throw new Error("Parish not deleted");
-    JSONResponse.success(res, "Success.", parish, 200);
-  } catch (error) {
-    JSONResponse.error(res, "Error.", error, 404);
-  }
-};
 
 // Checks if the platform is valid
 function checkForPlatform(platform) {

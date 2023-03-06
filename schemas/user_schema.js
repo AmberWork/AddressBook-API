@@ -12,7 +12,7 @@ const userSchema = new Schema({
     email: {type: String, required:[true, "Email is a required field"]},
     password: {type: String, required:[true, "Password is a required field"]},
     profile_image: {type: String},
-    role: {type: Number, default: 0},
+    role: {type: Number, default: 0, required:[true, "Role is a required field"]},
 
     // The cell number will be required if the home number is not provided and vice versa.
     mobile_number: {type: String, required: [function(){ return this.role != "ADMIN" && !this.home_number}, "A phone number needs to be on file"]},
