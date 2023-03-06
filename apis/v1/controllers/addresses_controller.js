@@ -13,6 +13,7 @@ const {
   statusMap,
   getKeyFromValue,
 } = require("../../../constants/constant_maps");
+const { remove } = require("../../../schemas/parish_schema");
 // ---------------
 
 // get all Address
@@ -189,6 +190,7 @@ exports.createAddress = async (req, res, next) => {
     platform = checkForPlatform(platform);
 
     let addressData = req.body;
+  
 
 
     // Check to see if newly created Parish id or user id matches the one in the database
@@ -203,7 +205,7 @@ exports.createAddress = async (req, res, next) => {
       throw new Error("No User matches this id");
     }
 
-    getKeyFromValue(statusMap, addressData.status)
+    // getKeyFromValue(statusMap, addressData.status)
 
     if (platform === "admin") {
       if (typeof(addressData.status) === "string") {
@@ -212,17 +214,11 @@ exports.createAddress = async (req, res, next) => {
       } else {
         throw new Error("Invalide status");
       }
-    } if (platform === "common" && platform === "web") {
-      if (addressData !== undefined) {
-        addressData.status = 0;
-        throw new Error("User is not admin");
-      }
+    } if (platform === "web") {
+      if (addressData.status = undefined)
+        throw new Error("You don't have permission to create a status");
     }
 
-
-
-
-   
     let address = await(await new Address(addressData).save()).populate("parish user_id")
     // address = address.populate("user_id parish");
     if (!address) throw new Error("Address not created");
@@ -239,9 +235,9 @@ exports.createAddress = async (req, res, next) => {
       createdAt: undefined,
     };
 
-    JSONResponse.success(res, "Success.", address, 201);
+    JSONResponse.success(res, "Address create successfully", {}, 201);
   } catch (error) {
-    JSONResponse.error(res, "Error.", error, 404);
+    JSONResponse.error(res, "Address was no created", {}, 404);
   }
 };
 
@@ -277,11 +273,9 @@ exports.updateAddress = async (req, res) => {
         throw new Error("Invalide status");
       }
 
-    } if (platform === "common" && platform === "web") {
-      if (addressData !== undefined) {
-        addressData.status = 0;
-        throw new Error("User is not admin");
-      }
+    } if (platform === "web") {
+      if (addressData.status = undefined)
+        throw new Error("You don't have permission to create a status");
     }
 
     addressData.user_id = user._id;
@@ -306,11 +300,12 @@ exports.updateAddress = async (req, res) => {
 
     address = this.makeAddressReadable(address);
 
-    JSONResponse.success(res, "Success.", address, 200);
+    JSONResponse.success(res, "Address was updated successfully", {}, 200);
   } catch (error) {
-    JSONResponse.error(res, "Error.", error, 404);
+    JSONResponse.error(res, "Address was not updated", {}, 404);
   }
 };
+
 
 // soft delete address
 exports.softDeleteAddress = async (req, res) => {
@@ -326,9 +321,9 @@ exports.softDeleteAddress = async (req, res) => {
 
     address = this.makeAddressReadable(address);
 
-    JSONResponse.success(res, "Success.", address, 200);
+    JSONResponse.success(res, "Address was deleted successfully", {}, 200);
   } catch (error) {
-    JSONResponse.error(res, "Error.", error, 404);
+    JSONResponse.error(res, "Address was not deleted", {}, 404);
   }
 };
 
@@ -341,9 +336,9 @@ exports.destroyAddress = async (req, res) => {
 
     address = this.makeAddressReadable(address);
 
-    JSONResponse.success(res, "Success.", address, 200);
+    JSONResponse.success(res, "Address was deleted successfully", {}, 200);
   } catch (error) {
-    JSONResponse.error(res, "Error.", error, 404);
+    JSONResponse.error(res, "Address was not deleted", {}, 404);
   }
 };
 
