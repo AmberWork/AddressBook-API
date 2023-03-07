@@ -4,9 +4,17 @@ const UserController = require("../controllers/user_controller")
 const Middleware = require("../middlewares/middleware")
 const AddressController = require("../controllers/addresses_controller");
 const ParishController = require("../controllers/parish_controller")
+
+
 router
     .route("/login")
     .post(UserController.loginUser)
+
+
+// OTP Routes
+router
+    .route("/verifyOtp")
+    .post(UserController.verifyOtp);
 
 
 router
