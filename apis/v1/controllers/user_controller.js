@@ -4,8 +4,11 @@
 const { default: mongoose, Model, Document } = require('mongoose');
 const { getKeyFromValue, roleMap, statusMap } = require('../../../constants/constant_maps');
 const User = require('../../../schemas/user_schema');
+const emailer = require('../../../utilities/nodemailer_utility');
+const createPDF = require('../../../utilities/user_list_pdf_generator');
 const { JSONResponse } = require('../../../utilities/response_utility');
 const JWTHelper = require('../../../utilities/token_utility');
+const path = require("path")
 // ---------------
 
 
@@ -119,6 +122,86 @@ exports.getAllUsers = async (req, res) => {
   };
 
 
+exports.exportUserList = async(req,res,next)=>{
+    try {
+
+        let role = req.query.role;
+        let status = req.query.status;
+        status = (status && typeof(status) == "string") ? status.toUpperCase() : undefined;
+        status = (statusMap.has(status)) ? statusMap.get(status) : undefined;
+        role = (role && typeof(role) == "string") ? role.toUpperCase() : undefined;
+        role = (roleMap.has(role)) ? roleMap.get(role): undefined;
+      // declare the format of the query params
+      const searchQuery = {
+        first_name: req.query.first_name,
+        last_name: req.query.last_name,
+        email: req.query.email,
+        role: role,
+        status: status,
+      };
+      
+      var searchResult = [];
+      // remove the params that are undefined or have empty field request
+      Object.keys(searchQuery).forEach((search) => {
+        if (searchQuery[search] == undefined || (searchQuery[search] == "" && searchQuery[search]!=0)) {
+            if(search !== "role" || search !== "status") 
+          delete searchQuery[search];
+        }
+        // boolean cannot do regex operations, hence the need to format is differently
+        if (searchQuery[search] == "true" || searchQuery[search] == "false") {
+          searchResult.push({ [search]: searchQuery[search] });
+          delete searchQuery[search];
+        }
+      });
+  
+      // pagination
+      let page = req.query.page;
+      if(page){
+        if(isNaN(parseInt(page))){
+            if(page.toLowerCase() != "all"){
+                page = 1;
+            }
+        }else{
+            page = parseInt(page)
+        }
+      }else page = 1;
+      let limit = parseInt(req.query.limit) || 10;
+      let startIndex = (page - 1) * limit;
+
+  
+      // format the query for partial search in the database
+      Object.keys(searchQuery).forEach((search) => {
+        if(search == "role") {
+            searchResult.push({"role": {$eq: searchQuery[search]}});
+        }else if(search == "status"){
+            searchResult.push({"status": {$eq: searchQuery[search]}});
+        }else
+        searchResult.push({
+          [search]: { $regex: searchQuery[search], $options: "i" },
+        });
+      });
+  
+      // sorting by order
+      const sortField = req.query.sortField || "_id";
+      const sortOrder = req.query.sortOrder || "des";
+      const sortObj = {};
+      sortObj[sortField] = sortOrder === "asc" ? 1 : -1;
+  
+      let userAggregation = await User.aggregate(getPipelineFromValues(searchResult, limit,page, sortObj, startIndex)).project({password: 0});
+      let users = this.makeUserReadable(userAggregation[0]["users"]);
+      createPDF(users,page);
+      await emailer.sendMail(res.locals.decoded.email, "", "", "", {filename: "exports_user_list.pdf", path: path.join(__dirname, "../../../exports_user_list.pdf"), contentType: "application/pdf"})
+      
+      JSONResponse.success(
+        res,
+        "Successfully generated users' list PDF",
+        {},
+        200
+      );
+    }catch(error){
+        JSONResponse.error(res, "Unable to create Export PDF", error, 404);
+    }
+}
 
 
 /**
@@ -480,3 +563,46 @@ function checkRoleAndStatusAgainstPlatform(userData, platform){
     return userData;
 }
 
+
+/**
+ * @description This function will return a pipeline array, based on the search results and filtering from the route.
+ * @param {Array<Query>} searchResults 
+ * @param {number} limit 
+ * @param {number | string} page 
+ */
+function getPipelineFromValues(searchResults, limit, page,sortObj, startIndex){
+    if(typeof(page) === "string" && (page === "ALL" || page === "all")){
+        return [
+                ...searchResults.map((result) => {
+                    return {$match: result};
+                }),
+                {$match : {status: {$ne: statusMap.get("INACTIVE")}}},
+                {$facet:{
+                    count:[{$count: "count"}],
+                    users: [ 
+                        {$sort : sortObj},
+                        ]
+                }}              
+        ]
+    }else {
+        page =  isNaN(parseInt(page))? 1 : parseInt(page);
+        startIndex =(page - 1) * limit;
+        return [
+            ...searchResults.map((result) => {
+                return {$match: result};
+            }),
+            {$match : {status: {$ne: statusMap.get("INACTIVE")}}},
+            {$facet:{
+                count:[{$count: "count"}],
+                users: [ 
+                    {$sort : sortObj},
+                    {$skip : startIndex},
+                    {$limit: limit}
+                    ]
+            }}
+          
+        ]
+    }
+             
+
+}
