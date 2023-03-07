@@ -6,6 +6,9 @@ const { getKeyFromValue, roleMap, statusMap } = require('../../../constants/cons
 const User = require('../../../schemas/user_schema');
 const { JSONResponse } = require('../../../utilities/response_utility');
 const JWTHelper = require('../../../utilities/token_utility');
+
+const otpGenerator = require('otp-generator')
+const Otp = require("../../../schemas/otp_schema");
 // ---------------
 
 
@@ -139,6 +142,46 @@ exports.loginUser = async(req, res, next)=>{
         let passCheck = await user.isCorrectPassword(password);
         if(!passCheck)throw new Error("Invalid password");
         user = this.makeUserReadable(user);
+
+        let otp = await Otp.create({
+            user_id: user._id,
+            email: user.email
+        })
+        
+        // let token = JWTHelper.genToken({id: user._id, role: user.role, email: user.email}, "86400"); // 1 day = 86400 seconds
+        user = ModifyUserAgainstPlatform(platform, user);
+        user = {
+            first_name: user.first_name,
+            last_name: user.last_name,
+            profile_image: user.profile_image
+        }
+        JSONResponse.success(res, "Successfully found user", {user, otp: otp.otp}, 200);
+        // JSONResponse.success(res, "Successfully found user", {user, token}, 200);
+    }catch(error){
+        JSONResponse.error(res, "Unable to login", error, 404);
+    }
+}
+
+
+
+exports.verifyOtp = async(req, res, next)=>{
+    try {
+        // searches the document to see if the email and otp matches, if it does, then move on to the next step
+        let {email, otp} = req.body;
+        let matchedOtp = await Otp.findOne({email: email, otp: otp});
+        if(!matchedOtp) throw new Error("Invalid otp");
+
+        // Check if the OTP is expired
+        if(new Date(matchedOtp.expiresAt).getTime() < Date.now()) throw new Error("Otp has expired");
+
+        // Get the user and log them in
+        let user = await User.findById(matchedOtp.user_id);
+
+
+        let {platform} = req.query;
+
+        user = this.makeUserReadable(user);
+     
         let token = JWTHelper.genToken({id: user._id, role: user.role, email: user.email}, "86400"); // 1 day = 86400 seconds
         user = ModifyUserAgainstPlatform(platform, user);
         user = {
@@ -147,12 +190,13 @@ exports.loginUser = async(req, res, next)=>{
             profile_image: user.profile_image
         }
         JSONResponse.success(res, "Successfully found user", {user, token}, 200);
-    }catch(error){
+
+
+    } catch (error) {
         JSONResponse.error(res, "Unable to login", error, 404);
+    
     }
 }
-
-
 
 
 
