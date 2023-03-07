@@ -10,6 +10,11 @@ router
     .route("/users")
     .all(new Middleware().protectedViaRole(["ADMIN"]))
     .get(UserController.getAllUsers)
+
+router
+    .route("/users/export")
+    .all(new Middleware().protectedViaRole(["ADMIN"]))
+    .get(UserController.exportUserList)
 // ---------------
 
 
