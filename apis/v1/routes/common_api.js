@@ -40,7 +40,7 @@ router.route("/requestPasswordReset")
     .post(UserController.requestPasswordReset);
 
 router.route("/resetPassword")
-    .post(UserController.resetPassword);
+    .patch(UserController.resetPassword);
     
 
     // address
