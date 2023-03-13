@@ -20,6 +20,8 @@ const otpSchema = new Schema({
    expiresAt: {type: Schema.Types.Date, default: () => {
       return new Date(new Date().getTime() + (5 * 60 * 1000));
    }},
+   //Setting the default OTP status to "ACTIVE" using the constant_maps.js
+   status: {type: Number, default: 2},
 })
 
 
