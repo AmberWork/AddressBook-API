@@ -8,6 +8,7 @@ const emailer = require('../../../utilities/nodemailer_utility');
 const createPDF = require('../../../utilities/user_list_pdf_generator');
 const { JSONResponse } = require('../../../utilities/response_utility');
 const JWTHelper = require('../../../utilities/token_utility');
+
 const otpGenerator = require('otp-generator')
 const Otp = require("../../../schemas/otp_schema");
 const path = require("path")
@@ -256,6 +257,9 @@ exports.verifyOtp = async(req, res, next)=>{
         // Check if the OTP is expired
         if(new Date(matchedOtp.expiresAt).getTime() < Date.now()) throw new Error("Otp has expired");
 
+        // if the OTP is inactive, throw an error
+        if(matchedOtp.status === statusMap.get("INACTIVE")) throw new Error("This Otp has already been used");
+
         // Get the user and log them in
         let user = await User.findById(matchedOtp.user_id);
 
@@ -263,6 +267,9 @@ exports.verifyOtp = async(req, res, next)=>{
         let {platform} = req.query;
 
         user = this.makeUserReadable(user);
+
+        matchedOtp.status = statusMap.get("INACTIVE");
+        await matchedOtp.save();
      
         let token = JWTHelper.genToken({id: user._id, role: user.role, email: user.email}, "86400"); // 1 day = 86400 seconds
         user = ModifyUserAgainstPlatform(platform, user);
